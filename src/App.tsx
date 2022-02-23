@@ -1,12 +1,19 @@
 import React from 'react';
+import { SnackbarProvider } from 'notistack';
 import { GlobalStateProvider } from './global-state';
 import { Main } from './pages/Main';
+import { ThemeProvider } from '@mui/material';
+import { theme } from './theme';
 
 function App() {
   return (
-  <GlobalStateProvider>
-    <Main />
-  </GlobalStateProvider>
+    <ThemeProvider theme={theme}>
+      <SnackbarProvider>
+        <GlobalStateProvider>
+          <Main />
+        </GlobalStateProvider>
+      </SnackbarProvider>
+    </ThemeProvider>
   );
 }
 
