@@ -19,7 +19,7 @@ export const STORES: { [T in STORENAMES]: STOREOPTIONS } = {
         keyPath: 'name'
     },
     accounts: {
-        keyPath: 'address'
+        keyPath: 'master.xpriv'
     },
     block_headers: {
         keyPath: 'id'

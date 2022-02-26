@@ -35,10 +35,14 @@ export class IndexedDBStore implements LocalStore {
 
     async executeQuery<T = any>(storeName: STORENAMES, query?: Partial<T>) {
         const db = await this.db;
-        const key = (<any>query)[STORES[storeName].keyPath];
+        if (!query) {
+            return db.getAll(storeName);
+        }
+
+        const key = (query as any)[STORES[storeName].keyPath];
         const allData = await db.getAll(storeName, key);
         const result = allData.filter((value) => (
-            Object.keys(<any>query).reduce((accumulated: boolean, currentKey: string) => {
+            Object.keys(query as any).reduce((accumulated: boolean, currentKey: string) => {
                 return accumulated && (<any>query)[currentKey] === value[currentKey];
             }, true)
         ));

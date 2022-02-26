@@ -3,7 +3,7 @@ import { IndexedDBStore } from "../storage/IndexedDBStore";
 import { LocalStore } from "../storage/LocalStore";
 import { Account } from "../models/Account";
 
-interface GlobalState {
+export interface GlobalState {
     /**
      * The logged in user
      */
