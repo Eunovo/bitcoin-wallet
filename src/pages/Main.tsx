@@ -4,8 +4,10 @@ import BitcoinLogo from "../assets/bitcoin-btc-logo.svg";
 import { CopyableContent } from "../components/CopyUtils";
 import { TransactionList } from "../components/transactions/Transactions";
 import { Transaction } from "../models/Transaction";
+import { useGlobalState } from "../global-state";
 
 export const Main: React.FC = () => {
+    const { principal } = useGlobalState();
     const transactions: Transaction[] = [];
 
     return <Box py={10}>
@@ -13,7 +15,7 @@ export const Main: React.FC = () => {
 
             <Box>
                 <Typography color='textSecondary' variant='body2' sx={{ px: 1 }}>Tap to Copy</Typography>
-                <CopyableContent sx={{ fontSize: '24px', px: 1, py: 0.5 }}>0xflabbbergasted</CopyableContent>
+                <CopyableContent sx={{ fontSize: '24px', px: 1, py: 0.5 }}>{principal?.receiveAddr}</CopyableContent>
             </Box>
 
             <Box display='flex' alignItems='center' width='30rem' mt={4}>
