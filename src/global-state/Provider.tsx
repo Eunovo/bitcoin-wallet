@@ -15,7 +15,6 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
     }, [state.ready, state.localStore]);
 
     useEffect(() => {
-        console.log(state.principal);
         if (!state.principal) return;
         state.localStore.save('accounts', state.principal);
     }, [state.principal]);
