@@ -3,7 +3,7 @@ import { useGlobalState } from "../../global-state";
 import { LoginOrOnboard } from "./Onbooard";
 
 export const Authorise: React.FC = ({ children }) => {
-    const { principal, ready } = useGlobalState();
+    const { wallet, ready } = useGlobalState();
 
     if (!ready) return <Box
         width='100vw'
@@ -15,7 +15,7 @@ export const Authorise: React.FC = ({ children }) => {
         <CircularProgress />
     </Box>
 
-    const failed = !principal;
+    const failed = !wallet;
     return <>
         <Slide in={failed} direction='down'>
             <div style={{ position: 'absolute' }}><LoginOrOnboard /></div>
