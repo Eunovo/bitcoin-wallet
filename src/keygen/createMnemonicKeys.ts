@@ -5,7 +5,7 @@ import bs58check from "bs58check";
 
 const _BITCOIN_MAINNNET = 0x00;
 const _BITCOIN_TESTNET = 0x6f;
-const BITCOIN_REGTEST = 0xfabfb5da;
+const BITCOIN_REGTEST = 0x6f;
 
 
 export function createMnemonic() {
@@ -21,11 +21,11 @@ export async function createHDMasterFromMnemonic(mnemonic: string) {
 
 function createAddressFrom(pubKey: Buffer) {
     const sha256 = createHash('sha256').update(pubKey).digest();
-    const rmd160 = createHash('rmd160').update(sha256).digest();
+    const rmd160 = createHash('ripemd160').update(sha256).digest();
     const versionByte = Buffer.allocUnsafe(21);
     versionByte.writeUInt8(BITCOIN_REGTEST, 0);
     rmd160.copy(versionByte, 1);
-    return bs58check.encode(rmd160);
+    return bs58check.encode(versionByte);
 }
 
 export function generateAddress(masterJSON: any) {
