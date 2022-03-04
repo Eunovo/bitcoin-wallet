@@ -14,7 +14,7 @@ export class IndexedDBStore implements LocalStore {
     }
 
     init() {
-        return openDB('LocalStore', 3, {
+        return openDB('LocalStore', 1, {
             upgrade: (db) => {
                 Object.keys(STORES).forEach((key) => {
                     try {
