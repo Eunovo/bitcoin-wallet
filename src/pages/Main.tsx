@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Container, Box, Button, Typography } from "@mui/material";
 import { Send as SendIcon, CallReceived as ReceiveIcon } from "@mui/icons-material";
 import BitcoinLogo from "../assets/bitcoin-btc-logo.svg";
@@ -7,7 +8,7 @@ import { Transaction } from "../models/Transaction";
 import { useGlobalState } from "../global-state";
 
 export const Main: React.FC = () => {
-    const { principal } = useGlobalState();
+    const { wallet } = useGlobalState();
     const transactions: Transaction[] = [];
 
     return <Box py={10}>
@@ -15,7 +16,7 @@ export const Main: React.FC = () => {
 
             <Box>
                 <Typography color='textSecondary' variant='body2' sx={{ px: 1 }}>Tap to Copy</Typography>
-                <CopyableContent sx={{ fontSize: '24px', px: 1, py: 0.5 }}>{principal?.receiveAddr}</CopyableContent>
+                <CopyableContent sx={{ fontSize: '24px', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr()}</CopyableContent>
             </Box>
 
             <Box display='flex' alignItems='center' width='30rem' mt={4}>

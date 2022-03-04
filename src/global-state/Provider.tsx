@@ -1,4 +1,5 @@
 import { Reducer, useEffect, useReducer, createContext, useContext } from "react";
+import { Wallet } from "../wallet/Wallet";
 import { AppContext, GlobalState, INITIAL_STATE } from "./context";
 
 const DispatchContext = createContext<any>({});
@@ -9,15 +10,15 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
     useEffect(() => {
         if (!state.localStore || state.ready) return;
         (async () => {
-            const savedPrincipal = (await state.localStore.executeQuery('accounts'))[0];
-            dispatch({ type: ActionTypes.init, payload: savedPrincipal });
+            const savedAccount = (await state.localStore.executeQuery('accounts'))[0];
+            dispatch({ type: ActionTypes.init, payload: savedAccount });
         })();
     }, [state.ready, state.localStore]);
 
     useEffect(() => {
-        if (!state.principal) return;
-        state.localStore.save('accounts', state.principal);
-    }, [state.principal]);
+        if (!state.wallet) return;
+        state.localStore.save('accounts', state.wallet.getAccount());
+    }, [state.wallet]);
 
     return <AppContext.Provider value={state}>
         <DispatchContext.Provider value={dispatch}>
@@ -42,10 +43,14 @@ function reducer(state: GlobalState, action: any) {
 
     switch (type) {
         case ActionTypes.init:
-            return { ...state, principal: payload, ready: true };
+            const newState = { ...state, ready: true };
+            if (payload) {
+                newState.wallet = new Wallet(payload, state.peers, state.localStore);
+            }
+            return newState;
 
         case ActionTypes.setup:
-            return { ...state, principal: payload }
+            return { ...state, wallet: new Wallet(payload, state.peers, state.localStore), }
 
         default:
             return state;

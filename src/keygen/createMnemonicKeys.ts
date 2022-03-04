@@ -28,14 +28,8 @@ function createAddressFrom(pubKey: Buffer) {
     return bs58check.encode(rmd160);
 }
 
-export function generateReceiveAddress(masterJSON: any) {
+export function generateAddress(masterJSON: any) {
     const hdMaster = hdkey.fromJSON(masterJSON);
     const pubKey = hdMaster.derive('m/0').publicKey;
-    return createAddressFrom(pubKey);
-}
-
-export function generateSendAddress(masterJSON: any) {
-    const hdMaster = hdkey.fromJSON(masterJSON);
-    const pubKey = hdMaster.derive('m/1').publicKey;
     return createAddressFrom(pubKey);
 }
