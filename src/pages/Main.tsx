@@ -16,7 +16,7 @@ export const Main: React.FC = () => {
 
             <Box>
                 <Typography color='textSecondary' variant='body2' sx={{ px: 1 }}>Tap to Copy</Typography>
-                <CopyableContent sx={{ fontSize: '24px', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr()}</CopyableContent>
+                <CopyableContent sx={{ fontSize: '24px', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr() || ""}</CopyableContent>
             </Box>
 
             <Box display='flex' alignItems='center' width='30rem' mt={4}>

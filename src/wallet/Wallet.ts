@@ -45,7 +45,7 @@ export class Wallet {
         return 0;
     }
 
-    async getReceiveAddr() {
+    getReceiveAddr() {
         return this.account.addresses[0];
     }
 
