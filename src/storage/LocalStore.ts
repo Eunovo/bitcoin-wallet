@@ -1,15 +1,16 @@
-// import { Observable } from "../Observable";
+import { Observable } from "../Observable";
 
 export interface LocalStore {
-    // events: Observable<{
-    //     action: 'save', store: STORENAMES, data: any
-    // }>
+    events: Observable<{
+        action: 'save' | 'delete', store: STORENAMES, data: any
+    }>
 
     save(storeName: STORENAMES, data: any): Promise<void>
     executeQuery<T = any>(storeName: STORENAMES, query?: Partial<T>): Promise<T[]>
+    remove(storeName: STORENAMES, query?: any): Promise<number>
 }
 
-export type STORENAMES = '_metadata' | 'accounts' | 'block_headers' | 'transactions';
+export type STORENAMES = '_metadata' | 'accounts' | 'block_headers' | 'coins' | 'transactions';
 export type STOREOPTIONS = {
     keyPath: string
 }
@@ -22,6 +23,9 @@ export const STORES: { [T in STORENAMES]: STOREOPTIONS } = {
         keyPath: 'master.xpriv'
     },
     block_headers: {
+        keyPath: 'id'
+    },
+    coins: {
         keyPath: 'id'
     },
     transactions : {

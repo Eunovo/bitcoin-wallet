@@ -1,11 +1,11 @@
 import { IDBPDatabase, openDB } from "idb";
-// import { Observable } from "../Observable";
+import { Observable } from "../Observable";
 import { LocalStore, STORENAMES, STORES } from "./LocalStore";
 
 export class IndexedDBStore implements LocalStore {
-    // public events: Observable<{
-    //     action: 'save', store: STORENAMES, data: any
-    // }> = new Observable();
+    public events: Observable<{
+        action: 'save' | 'delete', store: STORENAMES, data: any
+    }> = new Observable();
 
     private db: Promise<IDBPDatabase>;
 
@@ -14,10 +14,12 @@ export class IndexedDBStore implements LocalStore {
     }
 
     init() {
-        return openDB('LocalStore', 1, {
+        return openDB('LocalStore', 3, {
             upgrade: (db) => {
                 Object.keys(STORES).forEach((key) => {
-                    db.createObjectStore(key, STORES[key as STORENAMES]);
+                    try {
+                        db.createObjectStore(key, STORES[key as STORENAMES]);
+                    } catch (e: any) { console.log(e); }
                 });
             }
         });
@@ -26,11 +28,11 @@ export class IndexedDBStore implements LocalStore {
     async save(storeName: STORENAMES, data: any) {
         const db = await this.db;
         db.put(storeName, data);
-        // this.events.push({
-        //     action: 'save',
-        //     store: storeName,
-        //     data
-        // });
+        this.events.push({
+            action: 'save',
+            store: storeName,
+            data
+        });
     }
 
     async executeQuery<T = any>(storeName: STORENAMES, query?: Partial<T>) {
@@ -48,5 +50,9 @@ export class IndexedDBStore implements LocalStore {
         ));
 
         return result;
+    }
+
+    async remove(storeName: STORENAMES, query?: any) {
+        return 0;
     }
 }

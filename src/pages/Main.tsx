@@ -1,11 +1,12 @@
-import { useEffect } from "react";
 import { Container, Box, Button, Typography } from "@mui/material";
 import { Send as SendIcon, CallReceived as ReceiveIcon } from "@mui/icons-material";
 import BitcoinLogo from "../assets/bitcoin-btc-logo.svg";
 import { CopyableContent } from "../components/CopyUtils";
 import { TransactionList } from "../components/transactions/Transactions";
 import { Transaction } from "../models/Transaction";
+import { Wallet } from "../wallet/Wallet";
 import { useGlobalState } from "../global-state";
+import { useObservable } from "../Observable";
 
 export const Main: React.FC = () => {
     const { wallet } = useGlobalState();
@@ -19,12 +20,12 @@ export const Main: React.FC = () => {
                 <CopyableContent sx={{ fontSize: '24px', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr() || ""}</CopyableContent>
             </Box>
 
-            <Box display='flex' alignItems='center' width='30rem' mt={4}>
+            <Box display='flex' alignItems='center' justifyContent='center' mt={4}>
                 <img src={BitcoinLogo} alt="Bitcoin" style={{
                     objectFit: 'cover',
                     width: '70px', height: '70px'
                 }} />
-                <Typography sx={{ ml: 'auto', fontSize: '68px' }}>101.2457909</Typography>
+                <Typography sx={{ ml: 2, fontSize: '68px' }}>{wallet && <Balance wallet={wallet} />}</Typography>
             </Box>
 
             <Box display='flex' alignItems='center' justifyContent='center' mt={2} mb={8}>
@@ -51,4 +52,13 @@ export const Main: React.FC = () => {
 
         </Container>
     </Box>
+}
+
+const Balance: React.FC<{ wallet: Wallet }> = ({ wallet }) => {
+    const balance = useObservable<number>(wallet.balanceInSatoshis);
+    if (balance === undefined) return <></>
+
+    const balInBTC = balance / 10000000;
+    return <>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 8 })
+        .format(balInBTC)}</>
 }
