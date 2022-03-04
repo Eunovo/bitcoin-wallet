@@ -1,4 +1,4 @@
 export interface Metadata<T = any> {
-    key: string
+    name: string
     value: T
 }
