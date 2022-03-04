@@ -5,15 +5,17 @@ module.exports = function (config) {
     loaders.fallback = {
         // "fs": false,
         // "tls": false,
-        // "net": false,
-        // "http": require.resolve("stream-http"),
+        "net": false,
+        "http": require.resolve("stream-http"),
         // "https": false,
         // "zlib": require.resolve("browserify-zlib") ,
         // "path": require.resolve("path-browserify"),
         "stream": require.resolve("stream-browserify"),
         "util": require.resolve("util/"),
         "crypto": require.resolve("crypto-browserify"),
-        "buffer": require.resolve('buffer/')
+        "buffer": require.resolve('buffer/'),
+        "url": require.resolve("url/"),
+        "os": require.resolve("os-browserify/browser")
     }
 
     config.plugins = [
@@ -25,6 +27,6 @@ module.exports = function (config) {
             process: 'process/browser',
         })
     ];
-    
+
     return config
 }
