@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import {
     createHDMasterFromMnemonic, createMnemonic,
-    generateReceiveAddress, generateSendAddress
+    generateAddress
 } from "../../keygen/createMnemonicKeys";
 import { ActionTypes, useGlobalDispatch } from "../../global-state";
 
@@ -18,12 +18,10 @@ const Onboard: React.FC = () => {
     const completeWalletSetup = useCallback(async () => {
         setLoading(true);
         const masterJSON = await createHDMasterFromMnemonic(mnemonic);
-        const receiveAddr = generateReceiveAddress(masterJSON);
-        const sendAddr = generateSendAddress(masterJSON);
+        const receiveAddr = generateAddress(masterJSON);
         const principal = {
             master: masterJSON,
-            receiveAddr,
-            sendAddr
+            addresses: [receiveAddr]
         };
         dispatch({ type: ActionTypes.setup, payload: principal });
     }, [mnemonic]);
