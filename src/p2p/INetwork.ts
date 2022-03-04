@@ -8,8 +8,8 @@ export interface IPeers {
 }
 
 export enum MessageTypes {
-    filterload = 'filterload',
-    block = 'block'
+    block = 'block',
+    tx = 'tx'
 }
 
 export interface IConnectionConfig { 
