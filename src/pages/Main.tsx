@@ -58,7 +58,7 @@ const Balance: React.FC<{ wallet: Wallet }> = ({ wallet }) => {
     const balance = useObservable<number>(wallet.balanceInSatoshis);
     if (balance === undefined) return <></>
 
-    const balInBTC = balance / 10000000;
+    const balInBTC = balance / 100000000;
     return <>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 8 })
         .format(balInBTC)}</>
 }
