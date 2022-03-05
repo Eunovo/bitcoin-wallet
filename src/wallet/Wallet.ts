@@ -17,31 +17,63 @@ export class Wallet {
         private store: LocalStore
     ) {
         this.init();
+        this.currentTip.subscribe((newTip) => {
+            this.store.save('_metadata', { name: 'current_tip', value: newTip });
+        });
     }
 
     async init() {
         this.initBalance();
 
         const block = (await this.store.executeQuery<Metadata<Block>>(
-            '_metadata', { name: 'current_height' }))[0]?.value;
+            '_metadata', { name: 'current_tip' }))[0]?.value;
         this.handleNewTip(block);
 
         this.peers.on(MessageTypes.block, (block: Block) => {
-            console.log(block);
             this.handleNewTip(block);
         });
 
         const networkTip = await this.peers.getCurrentTip();
-        this.handleNewTip(networkTip); 
+        this.handleNewTip(networkTip);
     }
 
-    private handleNewTip(block: Block) {
+    private async handleNewTip(block: Block) {
         if (this.currentTip.currentValue && this.currentTip.currentValue.height >= block.height)
             return;
         const lastTip = this.currentTip.currentValue;
         this.currentTip.push(block);
-        console.log(lastTip, block);
         // New Block... Check for new transactions in all blocks from last height
+        if (!lastTip) {
+            // No saved data... load all utxos
+            const utxoPromises = this.account.addresses
+                .map((addr) => this.peers.getUTXOsFor(addr));
+            const utxos = await Promise.all(utxoPromises);
+            utxos.forEach((coins) => coins.forEach(coin => this.store.save('coins', coin)));
+            return;
+        }
+
+        // Else... check each block one by one
+        for (let i = lastTip.height + 1; i < block.height + 1; i++) {
+            await this.checkTxInBlock(i);
+        }
+    }
+
+    private async checkTxInBlock(height: number) {
+        const txs = await this.peers.getTxsByBlockHeight(height);
+        const addresses: any = this.account.addresses
+            .reduce((addrs, addr) => ({ ...addrs, [addr]: true }), {});
+
+        for (let i = 0; i < txs.length; i++) {
+            const tx = txs[i];
+            const { inputs, outputs } = await this.peers.getTxCoins(tx.txid);
+            const spentCoins = inputs.filter((coin: Coin) => addresses[coin.address]);
+            const newCoins = outputs.filter((coin: Coin) => addresses[coin.address]);
+
+            spentCoins
+                .forEach((coin: Coin) => this.store.remove('coins', { _id: coin._id }));
+            newCoins
+                .forEach((coin: Coin) => this.store.save('coins', coin));
+        }
     }
 
     private async initBalance() {
@@ -53,9 +85,10 @@ export class Wallet {
             if (event.store !== 'coins') return;
             const currentValue = this._balanceInSatoshis.currentValue ?? 0;
             const newValue = {
-                'save': currentValue + event.data.value,
-                'delete': currentValue - event.data.value,
-            }[event.action];
+                'save': () => currentValue + event.data.value,
+                'delete': () => currentValue - event.data.reduce(
+                    (acc: number, cur: Coin) => (acc + cur.value), 0),
+            }[event.action]();
 
             this._balanceInSatoshis.push(newValue);
         });

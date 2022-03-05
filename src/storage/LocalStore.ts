@@ -26,9 +26,9 @@ export const STORES: { [T in STORENAMES]: STOREOPTIONS } = {
         keyPath: 'id'
     },
     coins: {
-        keyPath: 'id'
+        keyPath: '_id'
     },
     transactions : {
-        keyPath: 'id'
+        keyPath: '_id'
     }
 }

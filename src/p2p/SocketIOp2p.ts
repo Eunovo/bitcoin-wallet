@@ -14,7 +14,9 @@ export class SocketIOConnection implements IPeers {
 
     connect() {
         console.log('Trying to connect...');
-        this.socket = io("ws://localhost:4005");
+        this.socket = io(
+            "ws://localhost:4005", { transports: ['websocket'] }
+        );
         this.socket.on("connect", () => {
             console.log(`Connected at ${new Date()}`);
 
@@ -61,6 +63,26 @@ export class SocketIOConnection implements IPeers {
 
     getCurrentTip() {
         return this.api('/block/tip', { method: 'get' });
+    }
+
+    getUTXOsFor(address: string) {
+        return this.api(
+            `/address/${address}`,
+            { method: 'get', query: { unspent: true } }
+        );
+    }
+
+    getTxsByBlockHeight(height: number) {
+        return this.api(
+            `/tx`,
+            { method: 'get', query: { blockHeight: height } }
+        );
+    }
+
+    getTxCoins(txid: string) {
+        return this.api(
+            `/tx/${txid}/coins`, { method: 'get' }
+        );
     }
 
     watchAddr(address: string): void {

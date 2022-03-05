@@ -53,6 +53,17 @@ export class IndexedDBStore implements LocalStore {
     }
 
     async remove(storeName: STORENAMES, query?: any) {
-        return 0;
+        const data = await this.executeQuery(storeName, query);
+        const db = await this.db;
+        await Promise.all(data.map(
+            doc => db.delete(storeName, doc[STORES[storeName].keyPath])
+        ));
+
+        this.events.push({
+            action: 'delete',
+            store: storeName,
+            data
+        });
+        return data.length;
     }
 }
