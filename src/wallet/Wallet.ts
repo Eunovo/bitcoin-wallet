@@ -1,3 +1,4 @@
+import coinselect from "coinselect";
 import { Account } from "../models/Account";
 import { Block } from "../models/Block";
 import { Coin } from "../models/Coin";
@@ -106,8 +107,25 @@ export class Wallet {
         return this.account.addresses[0];
     }
 
-    async gatherUTXOs(amount: number) {
+    async selectUTXOs(targets: { address: string, value: number }[]) {
+        const feeRate = await this.peers.getFeeEstimateLastNBlocks(22); //BTC per byte
 
+        const utxos = (await this.store.executeQuery<Coin>('coins', {}))
+            .map((coin) => ({
+                txid: coin.mintTxid,
+                vout: coin.mintIndex,
+                value: coin.value
+            }));
+
+        let { inputs, outputs, fee } = coinselect(utxos, targets, feeRate);
+        outputs = outputs?.map((output: any) => {
+            if (output.address) return output;
+            return {
+                address: this.account.addresses[0],
+                ...output
+            }
+        });
+        return { inputs, outputs, fee };
     }
 
     async signTx() {

@@ -1,11 +1,12 @@
 import { useMemo } from "react";
 import * as yup from "yup";
 import { Formik } from "formik";
-import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import { Fields, IFieldsProps } from "./forms/Fields";
 import { useObservable } from "../Observable";
 import { Wallet } from "../wallet/Wallet";
-import { convertSatoshisToBTC } from "../utils";
+import { convertSatoshisToBTC, convertBTCToSatoshis } from "../utils";
+import { useSnackbar } from "notistack";
 
 export interface ISendCoinsProps {
     wallet: Wallet
@@ -31,6 +32,7 @@ const SEND_FORM_FIELDS: IFieldsProps['fields'] = [
 ];
 
 export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => {
+    const { enqueueSnackbar } = useSnackbar();
     const balanceInSat = useObservable(wallet.balanceInSatoshis);
     const balance = useMemo(() => {
         if (!balanceInSat) return 0;
@@ -47,15 +49,25 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
                     .required("Amount is required")
                     .max(balance ?? 0, "Insufficient balamce")
             })}
-            onSubmit={() => { }}
+            onSubmit={async (values) => {
+                try {
+                    const { inputs, outputs, fee } = await wallet.selectUTXOs([
+                        { address: values.destinationAddr, value: convertBTCToSatoshis(values.amountInBTC) }
+                    ]);
+                    console.log(inputs, outputs, fee);
+                } catch (e: any) {
+                    enqueueSnackbar(e.message, { variant: 'error' });
+                }
+            }}
         >
             {
-                ({ isSubmitting, values, setFieldValue, submitForm }) => (
+                ({ isSubmitting, values, setErrors, setFieldValue, submitForm, validateForm }) => (
                     <>
                         <Fields fields={SEND_FORM_FIELDS} />
                         <Typography color='GrayText' variant='body2'>
                             You will have {
-                                values.amountInBTC ? balance - values.amountInBTC : balance
+                                new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 })
+                                    .format(values.amountInBTC ? balance - values.amountInBTC : balance)
                             } BTC left
                         </Typography>
 
@@ -70,7 +82,15 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
 
                             <Button
                                 disabled={isSubmitting}
-                                onClick={() => setFieldValue('openConfirmDialog', true)}
+                                onClick={async () => {
+                                    const errors = await validateForm();
+                                    if (Object.keys(errors).length) {
+                                        setErrors(errors);
+                                        return;
+                                    }
+
+                                    setFieldValue('openConfirmDialog', true)
+                                }}
                                 color='primary'
                                 variant='contained'
                                 startIcon={
@@ -87,9 +107,10 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
                             open={values.openConfirmDialog}
                             onClose={() => setFieldValue('openConfirmDialog', false)}
                         >
-                            <DialogContent sx={{ textAlign: 'center' }}>
+                            <DialogTitle>Confirm transfer</DialogTitle>
+                            <DialogContent>
                                 You are about to send <strong>{values.amountInBTC}</strong> BTC to{' '}
-                                <strong>{values.destinationAddr}</strong><br />
+                                <strong>{values.destinationAddr}</strong><br /><br />
                                 Are you sure you want to continue?
                             </DialogContent>
                             <DialogActions>

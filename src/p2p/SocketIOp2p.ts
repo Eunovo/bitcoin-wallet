@@ -58,11 +58,17 @@ export class SocketIOConnection implements IPeers {
             return response.data;
         } catch (e: any) {
             console.log(e);
+            throw e;
         }
     }
 
     getCurrentTip() {
         return this.api('/block/tip', { method: 'get' });
+    }
+
+    async getFeeEstimateLastNBlocks(nBlocks: number) {
+        const { feerate } = await this.api(`/fee/${nBlocks}`, { method: 'get' });
+        return feerate;
     }
 
     getUTXOsFor(address: string) {

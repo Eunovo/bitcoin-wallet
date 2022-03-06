@@ -3,6 +3,7 @@ import { Coin } from "../models/Coin";
 
 export interface IPeers {
     getCurrentTip(): Promise<Block>;
+    getFeeEstimateLastNBlocks(nBlocks: number): Promise<number>;
     getUTXOsFor(address: string): Promise<Coin[]>;
     getTxsByBlockHeight(height: number): Promise<any[]>;
     getTxCoins(txid: string): Promise<{ inputs: Coin[], outputs: Coin[] }>;
