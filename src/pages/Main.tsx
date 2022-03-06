@@ -1,15 +1,21 @@
-import { Container, Box, Button, Typography } from "@mui/material";
+import { useState } from "react";
+import { Container, Backdrop, Box, Button, Slide, Typography } from "@mui/material";
 import { Send as SendIcon, CallReceived as ReceiveIcon } from "@mui/icons-material";
 import BitcoinLogo from "../assets/bitcoin-btc-logo.svg";
 import { CopyableContent } from "../components/CopyUtils";
+import { SendCoins } from "../components/SendCoins";
 import { TransactionList } from "../components/transactions/Transactions";
 import { Transaction } from "../models/Transaction";
 import { Wallet } from "../wallet/Wallet";
 import { useGlobalState } from "../global-state";
 import { useObservable } from "../Observable";
+import { convertSatoshisToBTC } from "../utils";
 
 export const Main: React.FC = () => {
     const { wallet } = useGlobalState();
+    const [state, setState] = useState({ send: false, receive: false });
+    const toggle = (field: string) => setState((s: any) => ({ ...s, [field]: !s[field] }));
+
     const transactions: Transaction[] = [];
 
     return <Box py={10}>
@@ -32,7 +38,15 @@ export const Main: React.FC = () => {
 
                 <Button color='primary' variant='contained' endIcon={<ReceiveIcon />} sx={{ width: '7.5rem' }}>Receive</Button>
 
-                <Button color='primary' variant='contained' endIcon={<SendIcon />} sx={{ ml: 10, width: '7.5rem' }}>Send</Button>
+                <Button
+                    color='primary'
+                    variant='contained'
+                    endIcon={<SendIcon />}
+                    onClick={() => wallet && toggle('send')}
+                    sx={{ ml: 10, width: '7.5rem' }}
+                >
+                    Send
+                </Button>
 
             </Box>
 
@@ -51,6 +65,21 @@ export const Main: React.FC = () => {
             <TransactionList transactions={transactions} />
 
         </Container>
+
+        <Backdrop open={state.send} onClick={() => toggle('send')} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+            <Slide in={state.send} direction='up'>
+                <Box bgcolor='white' borderRadius={'5% 5% 0% 0%'} onClick={(e) => { e.stopPropagation(); }}
+                    position='absolute' pt={10} top={'30%'} left={0} right={0} bottom={0}>
+                    <Box mx='auto' width='100%' maxWidth={'40rem'}>
+                        <Typography variant="h3">Send Coins</Typography>
+
+                        <Box mt={4}>
+                            <SendCoins wallet={wallet!} handleBack={() => toggle('send')} />
+                        </Box>
+                    </Box>
+                </Box>
+            </Slide>
+        </Backdrop>
     </Box>
 }
 
@@ -58,7 +87,7 @@ const Balance: React.FC<{ wallet: Wallet }> = ({ wallet }) => {
     const balance = useObservable<number>(wallet.balanceInSatoshis);
     if (balance === undefined) return <></>
 
-    const balInBTC = balance / 100000000;
+    const balInBTC = convertSatoshisToBTC(balance);
     return <>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 8 })
         .format(balInBTC)}</>
 }
