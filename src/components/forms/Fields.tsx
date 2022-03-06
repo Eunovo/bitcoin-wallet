@@ -79,7 +79,7 @@ const AmountField: React.FC<TextFieldProps & { name: string }> = ({ name, ...res
             if (!regex.test(value)) return;
 
             setFieldValue(formattedField, value);
-            setFieldValue(name, Number.parseFloat(value));
+            setFieldValue(name, value ? Number.parseFloat(value) : 0);
         }}
         onBlur={(e) => {
             setFieldValue(formattedField, format(e.target.value));
