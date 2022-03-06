@@ -4,4 +4,6 @@ export interface Coin {
     script: string
     value: number
     confirmations: number
+    mintTxid: string
+    mintIndex: number
 }
