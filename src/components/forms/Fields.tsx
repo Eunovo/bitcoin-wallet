@@ -12,7 +12,7 @@ export interface IFieldsProps {
 }
 
 export const Fields: React.FC<IFieldsProps> = ({ fields }) => {
-    const { errors, touched, values, handleChange } = useFormikContext<any>();
+    const { errors, values, handleChange, handleBlur } = useFormikContext<any>();
 
     return <>
         {
@@ -35,6 +35,7 @@ export const Fields: React.FC<IFieldsProps> = ({ fields }) => {
                                 label={field.label}
                                 value={values[field.name]}
                                 onChange={handleChange}
+                                onBlur={handleBlur}
                                 type={field.type}
                                 multiline={field.multiline}
                                 sx={{ mt: 2, mb: 1, width: '100%' }}
@@ -43,7 +44,7 @@ export const Fields: React.FC<IFieldsProps> = ({ fields }) => {
                     }
 
                     <FormHelperText sx={{ mb: 2, width: '100%' }} error>
-                        {touched[field.name] && errors[field.name]}
+                        {errors[field.name]}
                     </FormHelperText>
                 </Fragment>
             )
@@ -64,7 +65,7 @@ function format(value: string | number) {
 }
 
 const AmountField: React.FC<TextFieldProps & { name: string }> = ({ name, ...rest }) => {
-    const { values, setFieldValue } = useFormikContext<any>();
+    const { values, setFieldValue, setFieldTouched } = useFormikContext<any>();
     const formattedField = `${name}__formatted`;
 
     return <TextField
@@ -82,6 +83,7 @@ const AmountField: React.FC<TextFieldProps & { name: string }> = ({ name, ...res
         }}
         onBlur={(e) => {
             setFieldValue(formattedField, format(e.target.value));
+            setFieldTouched(name, true);
         }}
     />
 }
