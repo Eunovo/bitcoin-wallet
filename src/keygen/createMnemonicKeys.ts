@@ -30,6 +30,10 @@ function createAddressFrom(pubKey: Buffer) {
 
 export function generateAddress(masterJSON: any) {
     const hdMaster = hdkey.fromJSON(masterJSON);
-    const pubKey = hdMaster.derive('m/0').publicKey;
-    return createAddressFrom(pubKey);
+    const path = 'm/0';
+    const child = hdMaster.derive(path);
+    const privKey = child.privateKey;
+    const pubKey = child.publicKey;
+
+    return { privKey, pubKey, address: createAddressFrom(pubKey), path };
 }

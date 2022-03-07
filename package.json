@@ -5,6 +5,7 @@
   "dependencies": {
     "@emotion/react": "^11.8.1",
     "@emotion/styled": "^11.8.1",
+    "@enumatech/secp256k1-js": "^1.0.0",
     "@i2labs/dns": "^1.0.1",
     "@mui/icons-material": "^5.4.2",
     "@mui/material": "^5.4.3",

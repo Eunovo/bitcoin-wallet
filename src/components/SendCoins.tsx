@@ -2,11 +2,12 @@ import { useMemo } from "react";
 import * as yup from "yup";
 import { Formik } from "formik";
 import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
+import { Psbt } from "bitcoinjs-lib";
+import { useSnackbar } from "notistack";
 import { Fields, IFieldsProps } from "./forms/Fields";
 import { useObservable } from "../Observable";
 import { Wallet } from "../wallet/Wallet";
 import { convertSatoshisToBTC, convertBTCToSatoshis } from "../utils";
-import { useSnackbar } from "notistack";
 
 export interface ISendCoinsProps {
     wallet: Wallet
@@ -55,6 +56,8 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
                         { address: values.destinationAddr, value: convertBTCToSatoshis(values.amountInBTC) }
                     ]);
                     console.log(inputs, outputs, fee);
+                    const tx = wallet.createTx(inputs, outputs);
+                    console.log(tx);
                 } catch (e: any) {
                     enqueueSnackbar(e.message, { variant: 'error' });
                 }

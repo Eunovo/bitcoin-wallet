@@ -1,3 +1,4 @@
+import { Network, Psbt, Signer } from "bitcoinjs-lib";
 import coinselect from "coinselect";
 import { Account } from "../models/Account";
 import { Block } from "../models/Block";
@@ -6,18 +7,33 @@ import { Metadata } from "../models/Metadata";
 import { Observable } from "../Observable";
 import { IPeers, MessageTypes } from "../p2p/INetwork";
 import { LocalStore } from "../storage/LocalStore";
+import { NETWORKS } from "./Networks";
+import { SecpSigner } from "./Signer";
 
 export class Wallet {
 
     private _balanceInSatoshis: Observable<number> = new Observable();
     private currentTip: Observable<Block | undefined> = new Observable();
+    private signers: { [k: string]: Signer } = {};
+    private network: Network;
 
     constructor(
         private account: Account,
         private peers: IPeers,
-        private store: LocalStore
+        private store: LocalStore,
+        network: 'regtest' | 'mainnet' = 'regtest'
     ) {
+        this.network = NETWORKS[network]
+
+        // Initialize signers for each address
+        this.signers = account.addresses.reduce((acc, addr) => ({
+            ...acc, [addr.address]: new SecpSigner(
+                Buffer.from(addr.privKey), Buffer.from(addr.pubKey), this.network
+            ),
+        }), {});
+
         this.init();
+
         this.currentTip.subscribe((newTip) => {
             this.store.save('_metadata', { name: 'current_tip', value: newTip });
         });
@@ -47,7 +63,7 @@ export class Wallet {
         if (!lastTip) {
             // No saved data... load all utxos
             const utxoPromises = this.account.addresses
-                .map((addr) => this.peers.getUTXOsFor(addr));
+                .map((addr) => this.peers.getUTXOsFor(addr.address));
             const utxos = await Promise.all(utxoPromises);
             utxos.forEach((coins) => coins.forEach(coin => this.store.save('coins', coin)));
             return;
@@ -62,7 +78,7 @@ export class Wallet {
     private async checkTxInBlock(height: number) {
         const txs = await this.peers.getTxsByBlockHeight(height);
         const addresses: any = this.account.addresses
-            .reduce((addrs, addr) => ({ ...addrs, [addr]: true }), {});
+            .reduce((addrs, addr) => ({ ...addrs, [addr.address]: true }), {});
 
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
@@ -104,14 +120,15 @@ export class Wallet {
     }
 
     getReceiveAddr() {
-        return this.account.addresses[0];
+        return this.account.addresses[0].address;
     }
 
     async selectUTXOs(targets: { address: string, value: number }[]) {
-        const feeRate = await this.peers.getFeeEstimateLastNBlocks(22); //BTC per byte
+        const feeRate = 200; // await this.peers.getFeeEstimateLastNBlocks(22); //BTC per byte
 
         const utxos = (await this.store.executeQuery<Coin>('coins', {}))
             .map((coin) => ({
+                address: coin.address,
                 txid: coin.mintTxid,
                 vout: coin.mintIndex,
                 value: coin.value
@@ -121,14 +138,34 @@ export class Wallet {
         outputs = outputs?.map((output: any) => {
             if (output.address) return output;
             return {
-                address: this.account.addresses[0],
+                address: this.account.addresses[0].address,
                 ...output
             }
         });
         return { inputs, outputs, fee };
     }
 
-    async signTx() {
+    createTx(
+        inputs: { txid: string, vout: number, address: string }[],
+        outputs: { address: string, value: number }[]
+    ): Psbt {
+        let psbt = new Psbt({ network: this.network });
+
+        psbt = inputs.reduce((psbt, input) => {
+            const { txid, vout } = input;
+            return psbt.addInput({ hash: txid, index: vout });
+        }, psbt);
+        psbt = psbt.addOutputs(outputs);
+        console.log(psbt.txInputs, inputs);
+        // psbt = inputs.reduce((psbt, input, index) => {
+        //     const { address } = input;
+        //     return psbt.signInput(index, this.signers[address]);
+        // }, psbt);
+
+        return psbt;
+    }
+
+    async signTx(tx: Psbt) {
 
     }
 }
