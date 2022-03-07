@@ -5,20 +5,22 @@ import BitcoinLogo from "../assets/bitcoin-btc-logo.svg";
 import { CopyableContent } from "../components/CopyUtils";
 import { SendCoins } from "../components/SendCoins";
 import { TransactionList } from "../components/transactions/Transactions";
-import { Transaction } from "../models/Transaction";
+import { useTransactions } from "../components/transactions/useTransactions";
 import { Wallet } from "../wallet/Wallet";
 import { useGlobalState } from "../global-state";
-import { useObservable } from "../Observable";
 import { convertSatoshisToBTC } from "../utils";
+import { useObservable } from "../Observable";
 
 export const Main: React.FC = () => {
     const theme = useTheme();
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));    
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
+
     const { wallet } = useGlobalState();
+    const transactions = useTransactions();
+
     const [state, setState] = useState({ send: false, receive: false });
     const toggle = (field: string) => setState((s: any) => ({ ...s, [field]: !s[field] }));
 
-    const transactions: Transaction[] = [];
 
     return <Box py={10}>
         <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', px: 2 }}>

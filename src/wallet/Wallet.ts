@@ -4,6 +4,7 @@ import { Account } from "../models/Account";
 import { Block } from "../models/Block";
 import { Coin } from "../models/Coin";
 import { Metadata } from "../models/Metadata";
+import { Transaction } from "../models/Transaction";
 import { Observable } from "../Observable";
 import { IPeers, MessageTypes } from "../p2p/INetwork";
 import { LocalStore } from "../storage/LocalStore";
@@ -82,6 +83,17 @@ export class Wallet {
 
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
+            const existingTx = await this.store.executeQuery<Transaction>(
+                'transactions', { txid: tx.txid });
+
+            if (existingTx[0]) {
+                // Update existing transaction
+                this.store.save(
+                    'transactions',
+                    { ...existingTx[0], confirmations: tx.confirmations }
+                );
+            }
+
             const { inputs, outputs } = await this.peers.getTxCoins(tx.txid);
             const spentCoins = inputs.filter((coin: Coin) => addresses[coin.address]);
             const newCoins = outputs.filter((coin: Coin) => addresses[coin.address]);
@@ -90,6 +102,18 @@ export class Wallet {
                 .forEach((coin: Coin) => this.store.remove('coins', { _id: coin._id }));
             newCoins
                 .forEach((coin: Coin) => this.store.save('coins', coin));
+
+            if (newCoins.length === 0 || existingTx[0]) return; // Only create new credit transactions
+
+            this.store.save(
+                'transactions',
+                {
+                    txid: tx.txid,
+                    senders: inputs.map((input) => ({ address: input.address, value: input.value })),
+                    amount: newCoins.reduce((acc, coin) => (acc + coin.value), 0),
+                    fee: tx.fee, confirmations: tx.confirmations
+                }
+            );
         }
     }
 
@@ -138,8 +162,9 @@ export class Wallet {
         outputs = outputs?.map((output: any) => {
             if (output.address) return output;
             return {
+                ...output,
                 address: this.account.addresses[0].address,
-                ...output
+                change: true, // Indicate change output
             }
         });
         return { inputs, outputs, fee };
@@ -165,7 +190,15 @@ export class Wallet {
         return psbt;
     }
 
-    async signTx(tx: Psbt) {
-
+    async send(tx: Psbt) {
+        const { txid } = await this.peers.sendRawTx(tx.toHex());
+        const targets = tx.data.outputs.filter((output: any) => !output.change);
+        await this.store.save('transactions', {
+            txid,
+            targets,
+            amount: targets.reduce((acc, output: any) => (acc + output.value), 0),
+            fee: tx.getFee(),
+            confirmations: 0
+        });
     }
 }

@@ -29,6 +29,6 @@ export const STORES: { [T in STORENAMES]: STOREOPTIONS } = {
         keyPath: '_id'
     },
     transactions : {
-        keyPath: '_id'
+        keyPath: 'txid'
     }
 }

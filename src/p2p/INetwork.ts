@@ -7,6 +7,7 @@ export interface IPeers {
     getUTXOsFor(address: string): Promise<Coin[]>;
     getTxsByBlockHeight(height: number): Promise<any[]>;
     getTxCoins(txid: string): Promise<{ inputs: Coin[], outputs: Coin[] }>;
+    sendRawTx(txHex: string): Promise<{ txid: string }>;
     send(type: MessageTypes, message: any): Promise<void>
     on(type: MessageTypes, listener: (message: any) => void): void
     watchAddr(address: string): void

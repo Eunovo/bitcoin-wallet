@@ -91,6 +91,10 @@ export class SocketIOConnection implements IPeers {
         );
     }
 
+    sendRawTx(txHex: string) {
+        return this.api(`/tx/send`, { method: 'post', body: { rawTx: txHex } });
+    }
+
     watchAddr(address: string): void {
         console.log(`Watching ${address}`);
         this.socket.on(address, (sanitizedCoin: any) => {
