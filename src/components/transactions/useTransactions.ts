@@ -11,10 +11,10 @@ export function useTransactions() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
 
     useEffect(() => {
-        if (!hasTxLoaded.current || event?.store !== 'transactions') return;
+        if (hasTxLoaded.current && event?.store !== 'transactions') return;
         (async () => {
             setTransactions(
-                await localStore.executeQuery<Transaction>('transactions', {})
+                (await localStore.executeQuery<Transaction>('transactions', {})).slice(0, 6)
             );
             hasTxLoaded.current = true;
         })()
