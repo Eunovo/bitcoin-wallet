@@ -34,7 +34,7 @@ const Onboard: React.FC = () => {
         height='100%'
         width='100vw'
     >
-        <Typography variant='h5' sx={{ mt: '30vh' }}>Write down this phrase somewhere safe</Typography>
+        <Typography variant='h5' sx={{ mt: '10vh' }}>Write down this phrase somewhere safe</Typography>
         <Typography color='textSecondary'>You can use this phrase to recover your wallet</Typography>
 
         <Typography sx={{ fontSize: '48px', maxWidth: '30rem', mt: 8 }}>
