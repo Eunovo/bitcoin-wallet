@@ -54,7 +54,7 @@ export const Main: React.FC = () => {
 
             </Box>
 
-            <Typography variant={isSmallScreen ? 'h5' : 'h3'} sx={{ position: 'relative' }}>
+            <Typography variant={isSmallScreen ? 'h5' : 'h3'} sx={{ position: 'relative', mb: 6 }}>
                 Transaction History
 
                 <Box

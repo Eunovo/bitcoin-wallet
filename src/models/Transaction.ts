@@ -23,4 +23,6 @@ export interface Transaction {
      * Number of confirmations
      */
     confirmations: number
+
+    blockTime?: string
 }

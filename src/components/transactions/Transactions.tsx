@@ -29,8 +29,8 @@ export const TransactionItem: React.FC<{ transaction: Transaction }> = ({ transa
 
         <Typography sx={{ flexGrow: 1, [theme.breakpoints.down('sm')]: { display: 'none' } }}>
             {
-                transaction.blocktime
-                    ? presentSummarisedDate(transaction.blocktime)
+                transaction.blockTime
+                    ? presentSummarisedDate(transaction.blockTime)
                     : <>Pending</>
             }
         </Typography>

@@ -90,7 +90,11 @@ export class Wallet {
                 // Update existing transaction
                 this.store.save(
                     'transactions',
-                    { ...existingTx[0], confirmations: tx.confirmations }
+                    {
+                        ...existingTx[0],
+                        confirmations: tx.confirmations,
+                        blockTime: tx.blockTime
+                    }
                 );
             }
 
@@ -111,7 +115,8 @@ export class Wallet {
                     txid: tx.txid,
                     senders: inputs.map((input) => ({ address: input.address, value: input.value })),
                     amount: newCoins.reduce((acc, coin) => (acc + coin.value), 0),
-                    fee: tx.fee, confirmations: tx.confirmations
+                    fee: tx.fee, confirmations: tx.confirmations,
+                    blockTime: tx.blockTime
                 }
             );
         }

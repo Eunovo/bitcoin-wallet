@@ -10,7 +10,7 @@ export interface LocalStore {
     remove(storeName: STORENAMES, query?: any): Promise<number>
 }
 
-export type STORENAMES = '_metadata' | 'accounts' | 'block_headers' | 'coins' | 'transactions';
+export type STORENAMES = '_metadata' | 'accounts' | 'coins' | 'transactions';
 export type STOREOPTIONS = {
     keyPath: string
 }
@@ -21,9 +21,6 @@ export const STORES: { [T in STORENAMES]: STOREOPTIONS } = {
     },
     accounts: {
         keyPath: 'master.xpriv'
-    },
-    block_headers: {
-        keyPath: 'id'
     },
     coins: {
         keyPath: '_id'
