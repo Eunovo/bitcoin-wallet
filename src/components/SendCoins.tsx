@@ -56,6 +56,10 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
                         { address: values.destinationAddr, value: convertBTCToSatoshis(values.amountInBTC) }
                     ]);
                     console.log(inputs, outputs, fee);
+                    if (!inputs || !outputs) {
+                        enqueueSnackbar('Cannot complete payment', { variant: 'error' });
+                        return;
+                    }
                     const tx = wallet.createTx(inputs, outputs);
                     console.log(tx);
                 } catch (e: any) {
