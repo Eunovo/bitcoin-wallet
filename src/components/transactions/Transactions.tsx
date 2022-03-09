@@ -24,7 +24,8 @@ export const TransactionItem: React.FC<{ transaction: Transaction }> = ({ transa
         <Typography sx={{
             flexGrow: 1, color: isDebit ? 'red' : 'green',
             [theme.breakpoints.down('sm')]: { textAlign: 'right' } }}>
-            {convertSatoshisToBTC(transaction.amount)} BTC
+            {new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                .format(convertSatoshisToBTC(transaction.amount))} BTC
         </Typography>
 
         <Typography sx={{ flexGrow: 1, [theme.breakpoints.down('sm')]: { display: 'none' } }}>
