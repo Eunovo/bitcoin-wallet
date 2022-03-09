@@ -8,8 +8,7 @@ export const QRCodeGenerator: React.FC<{ data: any }> = ({ data }) => {
         if (!canvasRef.current) return;
 
         QRCode.toCanvas(canvasRef.current, data, function (error) {
-            if (error) console.error(error)
-            console.log('success!');
+            if (error) console.error(error);
         });
     }, [data, canvasRef.current]);
 
