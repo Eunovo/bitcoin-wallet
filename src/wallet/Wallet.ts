@@ -152,6 +152,10 @@ export class Wallet {
         return this.account.addresses[0].address;
     }
 
+    getURI() {
+        return `bitcoin:${this.getReceiveAddr()}`;
+    }
+
     async selectUTXOs(targets: { address: string, value: number }[]) {
         const feeRate = 200; // await this.peers.getFeeEstimateLastNBlocks(22); //BTC per byte
 

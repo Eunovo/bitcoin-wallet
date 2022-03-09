@@ -4,6 +4,7 @@ import { Send as SendIcon, CallReceived as ReceiveIcon } from "@mui/icons-materi
 import BitcoinLogo from "../assets/bitcoin-btc-logo.svg";
 import { CopyableContent } from "../components/CopyUtils";
 import { SendCoins } from "../components/SendCoins";
+import { QRCodeGenerator } from "../components/QRCodeGenerator";
 import { TransactionList } from "../components/transactions/Transactions";
 import { useTransactions } from "../components/transactions/useTransactions";
 import { Wallet } from "../wallet/Wallet";
@@ -27,7 +28,7 @@ export const Main: React.FC = () => {
 
             <Box>
                 <Typography color='textSecondary' variant='body2' sx={{ px: 1 }}>Tap to Copy</Typography>
-                <CopyableContent sx={{ fontSize: 'clamp(18px, 4vw, 24px)', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr() || ""}</CopyableContent>
+                <CopyableContent sx={{ fontSize: 'clamp(16px, 4vw, 24px)', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr() || ""}</CopyableContent>
             </Box>
 
             <Box display='flex' alignItems='center' justifyContent='center' mt={4}>
@@ -40,7 +41,15 @@ export const Main: React.FC = () => {
 
             <Box display='flex' alignItems='center' justifyContent='center' mt={2} mb={8}>
 
-                <Button color='primary' variant='contained' endIcon={<ReceiveIcon />} sx={{ width: '7.5rem' }}>Receive</Button>
+                <Button
+                    color='primary'
+                    variant='contained'
+                    endIcon={<ReceiveIcon />}
+                    onClick={() => wallet && toggle('receive')}
+                    sx={{ width: '7.5rem' }}
+                >
+                    Receive
+                </Button>
 
                 <Button
                     color='primary'
@@ -70,7 +79,10 @@ export const Main: React.FC = () => {
 
         </Container>
 
-        <Backdrop open={state.send} onClick={() => toggle('send')} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <Backdrop open={state.send || state.receive}
+            onClick={() => setState({ send: false, receive: false })}
+            sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        >
             <Slide in={state.send} direction='up'>
                 <Box bgcolor='white' borderRadius={'5% 5% 0% 0%'} onClick={(e) => { e.stopPropagation(); }}
                     position='absolute' pt={10} px={2} top={'30%'} left={0} right={0} bottom={0}>
@@ -79,6 +91,30 @@ export const Main: React.FC = () => {
 
                         <Box mt={4}>
                             <SendCoins wallet={wallet!} handleBack={() => toggle('send')} />
+                        </Box>
+                    </Box>
+                </Box>
+            </Slide>
+
+            <Slide in={state.receive} direction='up'>
+                <Box bgcolor='white' borderRadius={'5% 5% 0% 0%'} onClick={(e) => { e.stopPropagation(); }}
+                    position='absolute' pt={10} px={2} top={'30%'} left={0} right={0} bottom={0}
+                    sx={{ [theme.breakpoints.down('md')]: { top: '20%', textAlign: 'center' } }}
+                >
+                    <Box mx='auto' width='100%' maxWidth={'50rem'}>
+                        <Typography variant={'h3'}>Receive Coins</Typography>
+
+                        <Box display='flex' alignItems={'center'} flexWrap='wrap' mt={4}>
+                            <Box display='flex' alignItems='center' justifyContent='center'
+                                height='15rem' width='20rem' mx='auto'
+                            >
+                                <QRCodeGenerator data={wallet?.getURI()} />    
+                            </Box>
+
+                            <Box mx='auto'>
+                                <Typography align='left' color='textSecondary' variant='body2' sx={{ px: 1 }}>Tap to Copy</Typography>
+                                <CopyableContent sx={{ fontSize: '16px', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr() || ""}</CopyableContent>
+                            </Box>
                         </Box>
                     </Box>
                 </Box>
