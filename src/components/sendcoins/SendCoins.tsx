@@ -44,19 +44,15 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
                     .required("Amount is required")
                     .max(balance ?? 0, "Insufficient balamce")
             })}
-            onSubmit={async (values) => {
+            onSubmit={async (values, actions) => {
                 try {
-                    const { inputs, outputs, fee } = await wallet.selectUTXOs([
+                    const tx = await wallet.createTx([
                         { address: values.destinationAddr, value: convertBTCToSatoshis(values.amountInBTC) }
                     ]);
-                    console.log(inputs, outputs, fee);
-                    if (!inputs || !outputs) {
-                        enqueueSnackbar('Cannot complete payment', { variant: 'error' });
-                        return;
-                    }
-                    const tx = wallet.createTx(inputs, outputs);
-                    console.log(tx);
+                    await wallet.send(tx);
+                    actions.resetForm();
                 } catch (e: any) {
+                    console.error(e);
                     enqueueSnackbar(e.message, { variant: 'error' });
                 }
             }}

@@ -51,9 +51,13 @@ export class SocketIOConnection implements IPeers {
         query?: any
     }) {
         try {
-            const response = await axios[params.method](
-                `http://localhost:4005/api/BTC/${this.network}${path}`,
-                { params: params.query, body: params.body }
+            const response = await axios(
+                {
+                    method: params.method,
+                    url: `http://localhost:4005/api/BTC/${this.network}${path}`,
+                    params: params.query,
+                    data: params.body
+                }
             );
             return response.data;
         } catch (e: any) {

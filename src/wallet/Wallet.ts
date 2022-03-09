@@ -1,23 +1,23 @@
-import { Network, Psbt, Signer } from "bitcoinjs-lib";
+import bs58check from "bs58check";
 import bip21 from "bip21";
 import coinselect from "coinselect";
 import { Account } from "../models/Account";
 import { Block } from "../models/Block";
 import { Coin } from "../models/Coin";
 import { Metadata } from "../models/Metadata";
-import { Transaction } from "../models/Transaction";
+import { Transaction as TxModel } from "../models/Transaction";
 import { Observable } from "../Observable";
 import { IPeers, MessageTypes } from "../p2p/INetwork";
 import { LocalStore } from "../storage/LocalStore";
 import { NETWORKS } from "./Networks";
-import { SecpSigner } from "./Signer";
+import { Networks, PrivateKey, Transaction } from "bitcore-lib";
 
 export class Wallet {
 
     private _balanceInSatoshis: Observable<number> = new Observable();
     private currentTip: Observable<Block | undefined> = new Observable();
-    private signers: { [k: string]: Signer } = {};
-    private network: Network;
+    private signers: { [k: string]: PrivateKey } = {};
+    private network: Networks.Network;
 
     constructor(
         private account: Account,
@@ -25,13 +25,12 @@ export class Wallet {
         private store: LocalStore,
         network: 'regtest' | 'mainnet' = 'regtest'
     ) {
-        this.network = NETWORKS[network]
+        this.network = NETWORKS[network];
 
         // Initialize signers for each address
         this.signers = account.addresses.reduce((acc, addr) => ({
-            ...acc, [addr.address]: new SecpSigner(
-                Buffer.from(addr.privKey), Buffer.from(addr.pubKey), this.network
-            ),
+            ...acc, [addr.address]: new PrivateKey(
+                bs58check.encode(Buffer.from(addr.privKey)), this.network),
         }), {});
 
         this.init();
@@ -84,7 +83,7 @@ export class Wallet {
 
         for (let i = 0; i < txs.length; i++) {
             const tx = txs[i];
-            const existingTx = await this.store.executeQuery<Transaction>(
+            const existingTx = await this.store.executeQuery<TxModel>(
                 'transactions', { txid: tx.txid });
 
             if (existingTx[0]) {
@@ -165,7 +164,8 @@ export class Wallet {
                 address: coin.address,
                 txid: coin.mintTxid,
                 vout: coin.mintIndex,
-                value: coin.value
+                value: coin.value,
+                script: coin.script,
             }));
 
         let { inputs, outputs, fee } = coinselect(utxos, targets, feeRate);
@@ -180,29 +180,37 @@ export class Wallet {
         return { inputs, outputs, fee };
     }
 
-    createTx(
-        inputs: { txid: string, vout: number, address: string }[],
-        outputs: { address: string, value: number }[]
-    ): Psbt {
-        let psbt = new Psbt({ network: this.network });
+    async createTx(targets: { address: string, value: number }[]) {
+        const { inputs, fee } = await this.selectUTXOs(targets);
 
-        psbt = inputs.reduce((psbt, input) => {
-            const { txid, vout } = input;
-            return psbt.addInput({ hash: txid, index: vout });
-        }, psbt);
-        psbt = psbt.addOutputs(outputs);
-        console.log(psbt.txInputs, inputs);
-        // psbt = inputs.reduce((psbt, input, index) => {
-        //     const { address } = input;
-        //     return psbt.signInput(index, this.signers[address]);
-        // }, psbt);
+        if (!inputs)
+            throw new Error('Could not complete transaction');
 
-        return psbt;
+        const utxos = inputs
+            .map(({ address, txid, vout, value, script }: any) =>
+                new Transaction.UnspentOutput({
+                    address, txid, vout,
+                    satoshis: value,
+                    scriptPubKey: script
+                }));
+        let transaction = new Transaction()
+            .from(utxos);
+        transaction = targets.reduce(
+            (tx, target) => tx.to(target.address, target.value),
+            transaction
+        );
+        transaction = transaction.fee(fee)
+            .change(this.account.addresses[0].address);
+
+        transaction = Object.values(this.signers)
+            .reduce((tx, pKey: PrivateKey) => tx.sign(pKey), transaction);
+
+        return transaction;
     }
 
-    async send(tx: Psbt) {
-        const { txid } = await this.peers.sendRawTx(tx.toHex());
-        const targets = tx.data.outputs.filter((output: any) => !output.change);
+    async send(tx: Transaction) {
+        const { txid } = await this.peers.sendRawTx(tx.toString());
+        const targets = tx.outputs.filter((output: any) => output === tx.getChangeOutput());
         await this.store.save('transactions', {
             txid,
             targets,
