@@ -1,4 +1,5 @@
 import { Network, Psbt, Signer } from "bitcoinjs-lib";
+import bip21 from "bip21";
 import coinselect from "coinselect";
 import { Account } from "../models/Account";
 import { Block } from "../models/Block";
@@ -153,7 +154,7 @@ export class Wallet {
     }
 
     getURI() {
-        return `bitcoin:${this.getReceiveAddr()}`;
+        return bip21.encode(this.getReceiveAddr());
     }
 
     async selectUTXOs(targets: { address: string, value: number }[]) {

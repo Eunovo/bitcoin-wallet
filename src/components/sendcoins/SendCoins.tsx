@@ -1,13 +1,19 @@
 import { useMemo } from "react";
+import bip21 from "bip21";
 import * as yup from "yup";
 import { Formik } from "formik";
-import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
-import { Psbt } from "bitcoinjs-lib";
+import {
+    Box, Button, CircularProgress,
+    Dialog, DialogActions, DialogContent,
+    DialogTitle, InputAdornment, Typography
+} from "@mui/material";
+import { QrCodeScanner } from "@mui/icons-material";
 import { useSnackbar } from "notistack";
-import { Fields, IFieldsProps } from "./forms/Fields";
-import { useObservable } from "../Observable";
-import { Wallet } from "../wallet/Wallet";
-import { convertSatoshisToBTC, convertBTCToSatoshis } from "../utils";
+import { Fields } from "../forms/Fields";
+import { useObservable } from "../../Observable";
+import { Wallet } from "../../wallet/Wallet";
+import { convertSatoshisToBTC, convertBTCToSatoshis } from "../../utils";
+import { ScanQRCodeButton } from "./ScanQRCodeButton";
 
 export interface ISendCoinsProps {
     wallet: Wallet
@@ -19,18 +25,6 @@ const INITIAL_VALUE = {
     amountInBTC: 0,
     openConfirmDialog: false
 }
-
-const SEND_FORM_FIELDS: IFieldsProps['fields'] = [
-    {
-        name: 'destinationAddr',
-        label: 'Destination Address'
-    },
-    {
-        name: 'amountInBTC',
-        label: 'Amount in BTC',
-        type: 'amount'
-    }
-];
 
 export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => {
     const { enqueueSnackbar } = useSnackbar();
@@ -70,7 +64,33 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
             {
                 ({ isSubmitting, values, setErrors, setFieldValue, submitForm, validateForm }) => (
                     <>
-                        <Fields fields={SEND_FORM_FIELDS} />
+                        <Fields fields={[
+                            {
+                                name: 'destinationAddr',
+                                label: 'Destination Address',
+                                endAdornment:
+                                    <InputAdornment position="end">
+                                        <ScanQRCodeButton
+                                            onScanSuccess={(decodedText, res) => {
+                                                setFieldValue(
+                                                    'destinationAddr', bip21.decode(decodedText).address);
+                                            }}
+                                            onScanFailure={(error) => {
+                                                console.log(error);
+                                                enqueueSnackbar(error.message, { variant: 'error' });
+                                            }}
+                                        >
+                                            <QrCodeScanner />
+                                        </ScanQRCodeButton>
+                                    </InputAdornment>
+                            },
+                            {
+                                name: 'amountInBTC',
+                                label: 'Amount in BTC',
+                                type: 'amount'
+                            }
+                        ]} />
+
                         <Typography color='GrayText' variant='body2'>
                             You will have {
                                 new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 })

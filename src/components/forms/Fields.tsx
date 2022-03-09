@@ -8,6 +8,7 @@ export interface IFieldsProps {
         name: string,
         type?: HTMLInputTypeAttribute | 'amount'
         multiline?: boolean
+        endAdornment?: React.ReactNode
     }[]
 }
 
@@ -38,6 +39,9 @@ export const Fields: React.FC<IFieldsProps> = ({ fields }) => {
                                 onBlur={handleBlur}
                                 type={field.type}
                                 multiline={field.multiline}
+                                InputProps={{
+                                    endAdornment: field.endAdornment
+                                }}
                                 sx={{ mt: 2, mb: 1, width: '100%' }}
                             />
                         )

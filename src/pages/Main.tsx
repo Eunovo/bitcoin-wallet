@@ -3,7 +3,7 @@ import { Container, Backdrop, Box, Button, Slide, Typography, useMediaQuery, use
 import { Send as SendIcon, CallReceived as ReceiveIcon } from "@mui/icons-material";
 import BitcoinLogo from "../assets/bitcoin-btc-logo.svg";
 import { CopyableContent } from "../components/CopyUtils";
-import { SendCoins } from "../components/SendCoins";
+import { SendCoins } from "../components/sendcoins/SendCoins";
 import { QRCodeGenerator } from "../components/QRCodeGenerator";
 import { TransactionList } from "../components/transactions/Transactions";
 import { useTransactions } from "../components/transactions/useTransactions";

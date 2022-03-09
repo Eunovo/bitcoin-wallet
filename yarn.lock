@@ -1868,6 +1868,11 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/bip21@^1.1.31":
+  version "1.1.31"
+  resolved "https://registry.yarnpkg.com/@types/bip21/-/bip21-1.1.31.tgz#537828d1281ca1b01a42ae7ba1bbd6ac30c5dd28"
+  integrity sha512-UK6e18IfiTM7b/g57UWsm+ky3X8wMgKfnl8Jh2tRK7Mtvj+F5FT9KnHNB9IMMNX8SlrJ5ssmeYIOpWzomR0uKg==
+
 "@types/body-parser@*":
   version "1.19.2"
   resolved "https://registry.yarnpkg.com/@types/body-parser/-/body-parser-1.19.2.tgz#aea2059e28b7658639081347ac4fab3de166e6f0"
@@ -2977,6 +2982,13 @@ bip174@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/bip174/-/bip174-2.0.1.tgz#39cf8ca99e50ce538fb762589832f4481d07c254"
   integrity sha512-i3X26uKJOkDTAalYAp0Er+qGMDhrbbh2o93/xiPyAN2s25KrClSpe3VXo/7mNJoqA5qfko8rLS2l3RWZgYmjKQ==
+
+bip21@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/bip21/-/bip21-2.0.3.tgz#6e95b542718af497b442d92ae8af433d6ea80368"
+  integrity sha512-L4ODmASLjsHYAU+TG7xffkYNMvHzAe4mkVX7mcvOUyKAr/MDBPrsRgqUhE8EmKdeEKHk5SYpX1Aexzvm/6WdbQ==
+  dependencies:
+    qs "^6.3.0"
 
 bip39@^3.0.4:
   version "3.0.4"
@@ -5307,6 +5319,11 @@ html-webpack-plugin@^5.5.0:
     lodash "^4.17.21"
     pretty-error "^4.0.0"
     tapable "^2.0.0"
+
+html5-qrcode@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/html5-qrcode/-/html5-qrcode-2.2.0.tgz#371e5828f31f85a715b31df988e207b263961042"
+  integrity sha512-8fkxks2N0NEfHnhxmq7AQnDTvx3IWp0VD2h5yhHufDTflWhC1dXPy/Xvdl+tA9nOsPCRqirOOZpl/OQbTYhnSw==
 
 htmlparser2@^6.1.0:
   version "6.1.0"
@@ -7885,6 +7902,13 @@ qs@6.9.7:
   version "6.9.7"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.9.7.tgz#4610846871485e1e048f44ae3b94033f0e675afe"
   integrity sha512-IhMFgUmuNpyRfxA90umL7ByLlgRXu6tIfKPpF5TmcfRLlLCckfP/g3IQmju6jjpu+Hh8rA+2p6A27ZSPOOHdKw==
+
+qs@^6.3.0:
+  version "6.10.3"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.10.3.tgz#d6cde1b2ffca87b5aa57889816c5f81535e22e8e"
+  integrity sha512-wr7M2E0OFRfIfJZjKGieI8lBKb7fRCH4Fv5KNPEs7gJ8jadvotdsS08PzOKR7opXhZ/Xkjtt3WF9g38drmyRqQ==
+  dependencies:
+    side-channel "^1.0.4"
 
 querystring@0.2.0:
   version "0.2.0"
