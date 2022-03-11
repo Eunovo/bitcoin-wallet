@@ -9,15 +9,15 @@ import { Transaction as TxModel } from "../models/Transaction";
 import { Observable } from "../Observable";
 import { IPeers, MessageTypes } from "../p2p/INetwork";
 import { LocalStore } from "../storage/LocalStore";
-import { NETWORKS } from "./Networks";
-import { Networks, PrivateKey, Transaction } from "bitcore-lib";
+import { NETWORKS, WalletNetwork } from "./Networks";
+import { PrivateKey, Transaction } from "bitcore-lib";
 
 export class Wallet {
 
     private _balanceInSatoshis: Observable<number> = new Observable();
     private currentTip: Observable<Block | undefined> = new Observable();
     private signers: { [k: string]: PrivateKey } = {};
-    private network: Networks.Network;
+    private _network: WalletNetwork;
 
     constructor(
         private account: Account,
@@ -25,12 +25,12 @@ export class Wallet {
         private store: LocalStore,
         network: 'regtest' | 'mainnet' = 'regtest'
     ) {
-        this.network = NETWORKS[network];
+        this._network = NETWORKS[network];
 
         // Initialize signers for each address
         this.signers = account.addresses.reduce((acc, addr) => ({
             ...acc, [addr.address]: new PrivateKey(
-                bs58check.encode(Buffer.from(addr.privKey)), this.network),
+                bs58check.encode(Buffer.from(addr.privKey)), this._network),
         }), {});
 
         this.init();
@@ -142,6 +142,10 @@ export class Wallet {
 
     get balanceInSatoshis() {
         return this._balanceInSatoshis;
+    }
+
+    get network() {
+        return this._network;
     }
 
     getAccount() {

@@ -2,12 +2,13 @@ import io from "socket.io-client";
 import axios from "axios";
 import { IPeers, MessageTypes } from "./INetwork";
 
-export class SocketIOConnection implements IPeers {
+export class BitcoreConnection implements IPeers {
 
     private socket: any;
 
     constructor(
-        private network: 'regtest' | 'testnet' | 'mainnet'
+        private network: 'regtest' | 'testnet' | 'mainnet',
+        private server: string
     ) {
         this.connect();
     }
@@ -15,7 +16,7 @@ export class SocketIOConnection implements IPeers {
     connect() {
         console.log('Trying to connect...');
         this.socket = io(
-            "ws://localhost:4005", { transports: ['websocket'] }
+            `ws://${this.server}`, { transports: ['websocket'] }
         );
         this.socket.on("connect", () => {
             console.log(`Connected at ${new Date()}`);
@@ -54,7 +55,7 @@ export class SocketIOConnection implements IPeers {
             const response = await axios(
                 {
                     method: params.method,
-                    url: `http://localhost:4005/api/BTC/${this.network}${path}`,
+                    url: `http://${this.server}/api/BTC/${this.network}${path}`,
                     params: params.query,
                     data: params.body
                 }

@@ -1,16 +1,19 @@
 import { useState } from "react";
-import { Container, Backdrop, Box, Button, Slide, Typography, useMediaQuery, useTheme } from "@mui/material";
+import {
+    Container, Backdrop, Box, Button,
+    Slide, Typography,
+    useMediaQuery, useTheme
+} from "@mui/material";
 import { Send as SendIcon, CallReceived as ReceiveIcon } from "@mui/icons-material";
-import BitcoinLogo from "../assets/bitcoin-btc-logo.svg";
-import { CopyableContent } from "../components/CopyUtils";
-import { SendCoins } from "../components/sendcoins/SendCoins";
-import { QRCodeGenerator } from "../components/QRCodeGenerator";
-import { TransactionList } from "../components/transactions/Transactions";
-import { useTransactions } from "../components/transactions/useTransactions";
-import { Wallet } from "../wallet/Wallet";
-import { useGlobalState } from "../global-state";
-import { convertSatoshisToBTC } from "../utils";
-import { useObservable } from "../Observable";
+import BitcoinLogo from "../../assets/bitcoin-btc-logo.svg";
+import { CopyableContent } from "../../components/CopyUtils";
+import { SendCoins } from "../../components/sendcoins/SendCoins";
+import { QRCodeGenerator } from "../../components/QRCodeGenerator";
+import { TransactionList } from "../../components/transactions/Transactions";
+import { useTransactions } from "../../components/transactions/useTransactions";
+import { useGlobalState } from "../../global-state";
+import { SelectNetwork } from "./SelectNetwork";
+import { Balance } from "./Balance";
 
 export const Main: React.FC = () => {
     const theme = useTheme();
@@ -26,7 +29,9 @@ export const Main: React.FC = () => {
     return <Box py={10}>
         <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', px: 2 }}>
 
-            <Box>
+            <SelectNetwork wallet={wallet} />
+
+            <Box mt={4}>
                 <Typography color='textSecondary' variant='body2' sx={{ px: 1 }}>Tap to Copy</Typography>
                 <CopyableContent sx={{ fontSize: 'clamp(16px, 4vw, 24px)', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr() || ""}</CopyableContent>
             </Box>
@@ -36,7 +41,9 @@ export const Main: React.FC = () => {
                     objectFit: 'cover',
                     width: '70px', height: '70px'
                 }} />
-                <Typography sx={{ ml: 2, fontSize: 'clamp(48px, 10vw, 68px)' }}>{wallet && <Balance wallet={wallet} />}</Typography>
+                <Typography sx={{ ml: 2, fontSize: 'clamp(48px, 10vw, 68px)' }}>
+                    {wallet && <Balance wallet={wallet} />}
+                </Typography>
             </Box>
 
             <Box display='flex' alignItems='center' justifyContent='center' mt={2} mb={8}>
@@ -121,13 +128,4 @@ export const Main: React.FC = () => {
             </Slide>
         </Backdrop>
     </Box>
-}
-
-const Balance: React.FC<{ wallet: Wallet }> = ({ wallet }) => {
-    const balance = useObservable<number>(wallet.balanceInSatoshis);
-    if (balance === undefined) return <></>
-
-    const balInBTC = convertSatoshisToBTC(balance);
-    return <>{new Intl.NumberFormat('en-IN', { minimumFractionDigits: 8 })
-        .format(balInBTC)}</>
 }
