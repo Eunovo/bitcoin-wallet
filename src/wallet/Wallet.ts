@@ -1,6 +1,7 @@
 import bs58check from "bs58check";
 import bip21 from "bip21";
 import coinselect from "coinselect";
+import bcrypt from "bcryptjs-cfw";
 import { Account } from "../models/Account";
 import { Block } from "../models/Block";
 import { Coin } from "../models/Coin";
@@ -16,6 +17,8 @@ import { createHDMasterFromMnemonic, createMnemonic, generateAddress } from "./k
 export class Wallet {
 
     private _account: Observable<Account | null> = new Observable();
+    private password?: string;
+    private _authenticated: Observable<boolean> = new Observable();
     private _balanceInSatoshis: Observable<number> = new Observable();
     private currentTip: Observable<Block | undefined> = new Observable();
     private signers: { [k: string]: PrivateKey } = {};
@@ -28,7 +31,9 @@ export class Wallet {
         account: Account | null | undefined,
         network: 'regtest' | 'mainnet' = 'regtest'
     ) {
+        this._authenticated.push(false);
         this._network = NETWORKS[network];
+
         this._unsubscribeList.push(
             this.currentTip.subscribe((newTip) => {
                 this.store.save('_metadata', {
@@ -39,7 +44,7 @@ export class Wallet {
 
         this._unsubscribeList.push(
             this._account.subscribe((account) => {
-                if (account === null) return;
+                if (!account) return;
 
                 // Initialize signers for each address
                 this.signers = account.addresses.reduce((acc, addr) => ({
@@ -63,6 +68,48 @@ export class Wallet {
 
     get account() {
         return this._account;
+    }
+
+    get authenticated() {
+        return this._authenticated;
+    }
+
+    async login(password: string) {
+        const savedPassword = (await this.store.executeQuery<Metadata<string>>(
+            '_metadata', { name: '_password' }))[0]?.value;
+
+        if (savedPassword) {
+            const isAuth = await new Promise((resolve, reject) => {
+                bcrypt.compare(password, savedPassword, function (err: any, res: boolean) {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+
+                    resolve(res);
+                });
+            });
+
+            if (!isAuth) throw new Error('Unauthorised');
+        } else {
+            await this.setPassword(password);
+        }
+
+        this.password = password;
+        this._authenticated.push(true);
+    }
+
+    private async setPassword(password: string) {
+        const hashedPassword = await new Promise((resolve, reject) => {
+            bcrypt.genSalt(10, function (err: any, salt: any) {
+                if (err) { reject(err); return; }
+                bcrypt.hash(password, salt, function (err: any, hash: string) {
+                    if (err) { reject(err); return; }
+                    resolve(hash);
+                });
+            });
+        });
+        await this.store.save('_metadata', { name: '_password', value: hashedPassword });
     }
 
     async getOrCreateMnemonic() {

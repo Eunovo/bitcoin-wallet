@@ -1,4 +1,5 @@
 import { Reducer, useEffect, useReducer, createContext, useContext } from "react";
+import { Account } from "../models/Account";
 import { useObservable } from "../Observable";
 import { AppContext, GlobalState, INITIAL_STATE } from "./context";
 
@@ -11,10 +12,12 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
     useEffect(() => {
         if (!state.localStore || state.ready) return;
         (async () => {
-            const savedAccount = (await state.localStore.executeQuery('accounts'))[0];
-            dispatch({ type: ActionTypes.init, payload: savedAccount });
+            const savedAccount = (await state.localStore.executeQuery<Account>(
+                'accounts', { network: state.wallet.network.name }))[0];
+            state.wallet.account.push(savedAccount);
+            dispatch({ type: ActionTypes.init });
         })();
-    }, [state.ready, state.localStore]);
+    }, [state.ready, state.localStore, state.wallet]);
 
     useEffect(() => {
         if (!account) return;

@@ -21,7 +21,7 @@ export class Observable<T> {
 
 
 export const useObservable = <T>(observable: Observable<T>) => {
-    const [data, setData] = useState<T>();
+    const [data, setData] = useState<T | undefined>(observable.currentValue);
 
     useEffect(() => {
         return observable.subscribe(setData);

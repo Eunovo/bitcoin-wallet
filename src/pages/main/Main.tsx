@@ -27,7 +27,6 @@ export const Main: React.FC = () => {
     const [state, setState] = useState({ send: false, receive: false });
     const toggle = (field: string) => setState((s: any) => ({ ...s, [field]: !s[field] }));
 
-
     return <Box py={10}>
         <Container sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', px: 2 }}>
 

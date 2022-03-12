@@ -1,9 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useGlobalDispatch, useGlobalState } from "../../global-state";
+import { Password } from "./Password";
+import { useSnackbar } from "notistack";
+import { useObservable } from "../../Observable";
 
 export const LoginOrOnboard: React.FC = () => {
-    return <Onboard />
+    const { wallet } = useGlobalState();
+    const { enqueueSnackbar } = useSnackbar();
+    const authenticated = useObservable(wallet.authenticated);
+
+    return authenticated ? <Onboard /> : <Password onSubmit={async (password) => {
+        try {
+            await wallet.login(password);
+        } catch (e: any) {
+            enqueueSnackbar(e.message, { variant: 'error' });
+        }
+    }} />
 }
 
 const Onboard: React.FC = () => {

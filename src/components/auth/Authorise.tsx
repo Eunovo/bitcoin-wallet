@@ -6,6 +6,7 @@ import { LoginOrOnboard } from "./Onbooard";
 export const Authorise: React.FC = ({ children }) => {
     const { wallet, ready } = useGlobalState();
     const account = useObservable(wallet.account);
+    const authenticated = useObservable(wallet.authenticated);
 
     if (!ready) return <Box
         width='100vw'
@@ -17,7 +18,7 @@ export const Authorise: React.FC = ({ children }) => {
         <CircularProgress />
     </Box>
 
-    const failed = !account;
+    const failed = !account || !authenticated;
     return <>
         <Slide in={failed} direction='down'>
             <div style={{ position: 'absolute' }}><LoginOrOnboard /></div>
