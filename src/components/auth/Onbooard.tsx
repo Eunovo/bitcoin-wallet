@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
-import { useGlobalDispatch, useGlobalState } from "../../global-state";
+import { ActionTypes, useGlobalDispatch, useGlobalState } from "../../global-state";
 import { Password } from "./Password";
 import { useSnackbar } from "notistack";
 import { useObservable } from "../../Observable";
@@ -20,20 +20,26 @@ export const LoginOrOnboard: React.FC = () => {
 }
 
 const Onboard: React.FC = () => {
-    const { wallet, localStore } = useGlobalState();
+    const { quickstart, wallet, localStore } = useGlobalState();
     const dispatch = useGlobalDispatch();
     const [loading, setLoading] = useState(false);
     const [mnemonic, setMnemonic] = useState<string>('');
 
     useEffect(() => {
         (async () => {
-            setMnemonic(await wallet.getOrCreateMnemonic());
+            const mnemonic = await wallet.getOrCreateMnemonic();
+            if (quickstart >= 1) {
+                await wallet.setup(mnemonic);
+                return;
+            }
+            setMnemonic(mnemonic);
         })();
-    }, [localStore, dispatch]);
+    }, [localStore, quickstart]);
 
     const completeWalletSetup = useCallback(async () => {
         setLoading(true);
         await wallet.setup(mnemonic);
+        dispatch({ type: ActionTypes.quickstart, payload: 1 });
     }, [wallet, mnemonic, dispatch]);
 
     return <Box

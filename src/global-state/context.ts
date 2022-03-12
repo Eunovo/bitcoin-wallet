@@ -15,6 +15,12 @@ export interface GlobalState {
      */
     ready: boolean,
 
+    /**
+     * Indicatest the stage of onboarding the user is at
+     * A fresh user will be at level 0
+     */
+    quickstart: number
+
     peers: IPeers,
 
     localStore: LocalStore
@@ -24,6 +30,7 @@ const localStore = new IndexedDBStore();
 const peers = NETWORKS[DEFAULT_NETWORK].connect();
 export const INITIAL_STATE: GlobalState = {
     ready: false,
+    quickstart: 0,
     peers,
     localStore,
     wallet: new Wallet(peers, localStore, null, DEFAULT_NETWORK)

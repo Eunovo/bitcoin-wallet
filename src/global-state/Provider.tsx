@@ -1,5 +1,6 @@
 import { Reducer, useEffect, useReducer, createContext, useContext } from "react";
 import { Account } from "../models/Account";
+import { Metadata } from "../models/Metadata";
 import { useObservable } from "../Observable";
 import { AppContext, GlobalState, INITIAL_STATE } from "./context";
 
@@ -14,8 +15,12 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
         (async () => {
             const savedAccount = (await state.localStore.executeQuery<Account>(
                 'accounts', { network: state.wallet.network.name }))[0];
+
+            const quickstart = (await state.localStore.executeQuery<Metadata<number>>(
+                '_metadata', { name: 'quickstart' }))[0]?.value;
+
             state.wallet.account.push(savedAccount);
-            dispatch({ type: ActionTypes.init });
+            dispatch({ type: ActionTypes.init, payload: { quickstart } });
         })();
     }, [state.ready, state.localStore, state.wallet]);
 
@@ -34,7 +39,7 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
 export const useGlobalDispatch = () => useContext(DispatchContext);
 
 export enum ActionTypes {
-    init, change_network
+    init, change_network, quickstart
 }
 
 export interface Action {
@@ -47,7 +52,7 @@ function reducer(state: GlobalState, action: any) {
 
     switch (type) {
         case ActionTypes.init:
-            return { ...state, ready: true };
+            return { ...state, ...action.payload, ready: true };
 
         case ActionTypes.change_network:
             state.peers.destroy();
@@ -57,6 +62,9 @@ function reducer(state: GlobalState, action: any) {
                 wallet: payload.wallet,
                 peers: payload.peers
             };
+
+        case ActionTypes.quickstart:
+            return { ...state, quickstart: action.payload };
 
         default:
             return state;
