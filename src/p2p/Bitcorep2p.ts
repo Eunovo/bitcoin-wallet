@@ -46,6 +46,10 @@ export class BitcoreConnection implements IPeers {
         this.socket.on(type, listener);
     }
 
+    destroy() {
+        this.socket.close();
+    }
+
     private async api(path: string, params: {
         method: 'get' | 'post',
         body?: any,

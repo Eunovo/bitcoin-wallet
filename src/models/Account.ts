@@ -1,5 +1,5 @@
 export interface Account {
-    network: 'regtest' | 'testnet' | 'mainnet'
+    network: string
     master: { xpriv: string, xpub: string }
-    addresses: { privKey: string, pubKey: string, address: string }[]
+    addresses: { privKey: Buffer, pubKey: Buffer, address: string }[]
 }

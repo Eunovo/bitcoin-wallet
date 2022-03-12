@@ -4,9 +4,10 @@ import { LocalStore } from "../storage/LocalStore";
 import { IPeers } from "../p2p/INetwork";
 import { BitcoreConnection } from "../p2p/Bitcorep2p";
 import { Wallet } from "../wallet/Wallet";
+import { DEFAULT_NETWORK, NETWORKS } from "../wallet/Networks";
 
 export interface GlobalState {
-    wallet?: Wallet
+    wallet: Wallet
 
     /**
      * Indicates that the state
@@ -20,10 +21,12 @@ export interface GlobalState {
 }
 
 const localStore = new IndexedDBStore();
+const peers = NETWORKS[DEFAULT_NETWORK].connect();
 export const INITIAL_STATE: GlobalState = {
     ready: false,
-    peers: new BitcoreConnection('regtest', 'localhost:4005'),
+    peers,
     localStore,
+    wallet: new Wallet(peers, localStore, null, DEFAULT_NETWORK)
 };
 
 export const AppContext = createContext<GlobalState>(INITIAL_STATE);

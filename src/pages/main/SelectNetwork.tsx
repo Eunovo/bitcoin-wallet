@@ -3,8 +3,12 @@ import { ButtonBase, Box, Menu, MenuItem, Typography } from "@mui/material";
 import { KeyboardArrowDown } from "@mui/icons-material";
 import { Wallet } from "../../wallet/Wallet";
 import { NETWORKS } from "../../wallet/Networks";
+import { ActionTypes, useGlobalDispatch, useGlobalState } from "../../global-state";
+import { Account } from "../../models/Account";
 
 export const SelectNetwork: React.FC<{ wallet?: Wallet }> = ({ wallet }) => {
+    const { localStore } = useGlobalState();
+    const dispatch = useGlobalDispatch();
     const anchor = useRef<any>(null);
     const [open, setOpen] = useState(false);
 
@@ -29,11 +33,23 @@ export const SelectNetwork: React.FC<{ wallet?: Wallet }> = ({ wallet }) => {
             anchorEl={anchor.current} open={open}
             onClose={() => setOpen(false)}
         >
-            {Object.keys(NETWORKS).map((key) => (
+            {Object.keys(NETWORKS).map((key: any) => (
                 <MenuItem key={key}
                     sx={{ width: '10rem' }}
-                    onClick={() => {
-                        console.log(NETWORKS[key]);
+                    onClick={async () => {
+                        const network = NETWORKS[key];
+                        const peers = network.connect();
+                        const accounts = await localStore.executeQuery<Account>(
+                            'accounts', { network: key });
+
+                        dispatch({
+                            type: ActionTypes.change_network,
+                            payload: {
+                                wallet: new Wallet(peers, localStore, accounts[0], key),
+                                peers
+                            }    
+                        });
+
                         setOpen(false);
                     }}>
                     {key}

@@ -11,6 +11,7 @@ export interface IPeers {
     send(type: MessageTypes, message: any): Promise<void>
     on(type: MessageTypes, listener: (message: any) => void): void
     watchAddr(address: string): void
+    destroy(): void
 }
 
 export enum MessageTypes {

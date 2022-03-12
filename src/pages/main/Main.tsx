@@ -14,12 +14,14 @@ import { useTransactions } from "../../components/transactions/useTransactions";
 import { useGlobalState } from "../../global-state";
 import { SelectNetwork } from "./SelectNetwork";
 import { Balance } from "./Balance";
+import { useObservable } from "../../Observable";
 
 export const Main: React.FC = () => {
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
     const { wallet } = useGlobalState();
+    const account = useObservable(wallet.account);
     const transactions = useTransactions();
 
     const [state, setState] = useState({ send: false, receive: false });
@@ -33,7 +35,9 @@ export const Main: React.FC = () => {
 
             <Box mt={4}>
                 <Typography color='textSecondary' variant='body2' sx={{ px: 1 }}>Tap to Copy</Typography>
-                <CopyableContent sx={{ fontSize: 'clamp(16px, 4vw, 24px)', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr() || ""}</CopyableContent>
+                <CopyableContent sx={{ fontSize: 'clamp(16px, 4vw, 24px)', px: 1, py: 0.5 }}>
+                    {account ? wallet.getReceiveAddrFor(account) : ""}
+                </CopyableContent>
             </Box>
 
             <Box display='flex' alignItems='center' justifyContent='center' mt={4}>
@@ -120,7 +124,9 @@ export const Main: React.FC = () => {
 
                             <Box mx='auto'>
                                 <Typography align='left' color='textSecondary' variant='body2' sx={{ px: 1 }}>Tap to Copy</Typography>
-                                <CopyableContent sx={{ fontSize: '16px', px: 1, py: 0.5 }}>{wallet?.getReceiveAddr() || ""}</CopyableContent>
+                                <CopyableContent sx={{ fontSize: '16px', px: 1, py: 0.5 }}>
+                                    {account ? wallet.getReceiveAddrFor(account) : ""}
+                                </CopyableContent>
                             </Box>
                         </Box>
                     </Box>

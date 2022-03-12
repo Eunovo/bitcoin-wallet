@@ -1,11 +1,12 @@
 import { Reducer, useEffect, useReducer, createContext, useContext } from "react";
-import { Wallet } from "../wallet/Wallet";
+import { useObservable } from "../Observable";
 import { AppContext, GlobalState, INITIAL_STATE } from "./context";
 
 const DispatchContext = createContext<any>({});
 
 export const GlobalStateProvider: React.FC = ({ children }) => {
     const [state, dispatch] = useReducer<Reducer<GlobalState, any>>(reducer, INITIAL_STATE);
+    const account = useObservable(state.wallet.account);
 
     useEffect(() => {
         if (!state.localStore || state.ready) return;
@@ -16,9 +17,9 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
     }, [state.ready, state.localStore]);
 
     useEffect(() => {
-        if (!state.wallet) return;
-        state.localStore.save('accounts', state.wallet.getAccount());
-    }, [state.wallet]);
+        if (!account) return;
+        state.localStore.save('accounts', account);
+    }, [account]);
 
     return <AppContext.Provider value={state}>
         <DispatchContext.Provider value={dispatch}>
@@ -30,7 +31,7 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
 export const useGlobalDispatch = () => useContext(DispatchContext);
 
 export enum ActionTypes {
-    init, setup
+    init, change_network
 }
 
 export interface Action {
@@ -43,14 +44,16 @@ function reducer(state: GlobalState, action: any) {
 
     switch (type) {
         case ActionTypes.init:
-            const newState = { ...state, ready: true };
-            if (payload) {
-                newState.wallet = new Wallet(payload, state.peers, state.localStore);
-            }
-            return newState;
+            return { ...state, ready: true };
 
-        case ActionTypes.setup:
-            return { ...state, wallet: new Wallet(payload, state.peers, state.localStore), }
+        case ActionTypes.change_network:
+            state.peers.destroy();
+            state.wallet.destroy();
+            return {
+                ...state,
+                wallet: payload.wallet,
+                peers: payload.peers
+            };
 
         default:
             return state;

@@ -11,51 +11,108 @@ import { IPeers, MessageTypes } from "../p2p/INetwork";
 import { LocalStore } from "../storage/LocalStore";
 import { NETWORKS, WalletNetwork } from "./Networks";
 import { PrivateKey, Transaction } from "bitcore-lib";
+import { createHDMasterFromMnemonic, createMnemonic, generateAddress } from "./keygen";
 
 export class Wallet {
 
+    private _account: Observable<Account | null> = new Observable();
     private _balanceInSatoshis: Observable<number> = new Observable();
     private currentTip: Observable<Block | undefined> = new Observable();
     private signers: { [k: string]: PrivateKey } = {};
     private _network: WalletNetwork;
+    private _unsubscribeList: (() => void)[] = [];
 
     constructor(
-        private account: Account,
         private peers: IPeers,
         private store: LocalStore,
+        account: Account | null | undefined,
         network: 'regtest' | 'mainnet' = 'regtest'
     ) {
         this._network = NETWORKS[network];
+        this._unsubscribeList.push(
+            this.currentTip.subscribe((newTip) => {
+                this.store.save('_metadata', {
+                    name: `current_tip_${this._network.name}`,
+                    value: newTip
+                });
+            }));
 
-        // Initialize signers for each address
-        this.signers = account.addresses.reduce((acc, addr) => ({
-            ...acc, [addr.address]: new PrivateKey(
-                bs58check.encode(Buffer.from(addr.privKey)), this._network),
-        }), {});
+        this._unsubscribeList.push(
+            this._account.subscribe((account) => {
+                if (account === null) return;
 
-        this.init();
+                // Initialize signers for each address
+                this.signers = account.addresses.reduce((acc, addr) => ({
+                    ...acc, [addr.address]: new PrivateKey(
+                        bs58check.encode(Buffer.from(addr.privKey)), this._network),
+                }), {});
 
-        this.currentTip.subscribe((newTip) => {
-            this.store.save('_metadata', { name: 'current_tip', value: newTip });
+                this.init(account);
+            }));
+
+        this.account.push(account || null);
+    }
+
+    get balanceInSatoshis() {
+        return this._balanceInSatoshis;
+    }
+
+    get network() {
+        return this._network;
+    }
+
+    get account() {
+        return this._account;
+    }
+
+    async getOrCreateMnemonic() {
+        const savedMnemonic = (await this.store.executeQuery<Metadata>(
+            '_metadata', { name: 'mnemonic' }))[0]?.value;
+        if (savedMnemonic) return savedMnemonic;
+
+        const newMnemonic = createMnemonic();
+        await this.store.save('_metadata', { name: 'mnemonic', value: newMnemonic });
+
+        return newMnemonic;
+    }
+
+    getReceiveAddrFor(account: Account) {
+        return account.addresses[0].address;
+    }
+
+    getURI() {
+        const account = this._account.currentValue;
+        if (!account) return;
+
+        return bip21.encode(this.getReceiveAddrFor(account));
+    }
+
+    async setup(mnemonic: string) {
+        const masterJSON = await createHDMasterFromMnemonic(mnemonic);
+        const receiveAddr = generateAddress(masterJSON, this._network.addressVersion);
+        this._account.push({
+            master: masterJSON,
+            addresses: [receiveAddr],
+            network: this._network.name
         });
     }
 
-    async init() {
+    async init(account: Account) {
         this.initBalance();
 
         const block = (await this.store.executeQuery<Metadata<Block>>(
-            '_metadata', { name: 'current_tip' }))[0]?.value;
-        this.handleNewTip(block);
+            '_metadata', { name: `current_tip_${this._network.name}` }))[0]?.value;
+        this.handleNewTip(account, block);
 
         this.peers.on(MessageTypes.block, (block: Block) => {
-            this.handleNewTip(block);
+            this.handleNewTip(account, block);
         });
 
         const networkTip = await this.peers.getCurrentTip();
-        this.handleNewTip(networkTip);
+        this.handleNewTip(account, networkTip);
     }
 
-    private async handleNewTip(block: Block) {
+    private async handleNewTip(account: Account, block: Block) {
         if (this.currentTip.currentValue && this.currentTip.currentValue.height >= block.height)
             return;
         const lastTip = this.currentTip.currentValue;
@@ -63,7 +120,7 @@ export class Wallet {
         // New Block... Check for new transactions in all blocks from last height
         if (!lastTip) {
             // No saved data... load all utxos
-            const utxoPromises = this.account.addresses
+            const utxoPromises = account.addresses
                 .map((addr) => this.peers.getUTXOsFor(addr.address));
             const utxos = await Promise.all(utxoPromises);
             utxos.forEach((coins) => coins.forEach(coin => this.store.save('coins', coin)));
@@ -72,13 +129,13 @@ export class Wallet {
 
         // Else... check each block one by one
         for (let i = lastTip.height + 1; i < block.height + 1; i++) {
-            await this.checkTxInBlock(i);
+            await this.checkTxInBlock(account, i);
         }
     }
 
-    private async checkTxInBlock(height: number) {
+    private async checkTxInBlock(account: Account, height: number) {
         const txs = await this.peers.getTxsByBlockHeight(height);
-        const addresses: any = this.account.addresses
+        const addresses: any = account.addresses
             .reduce((addrs, addr) => ({ ...addrs, [addr.address]: true }), {});
 
         for (let i = 0; i < txs.length; i++) {
@@ -123,47 +180,35 @@ export class Wallet {
     }
 
     private async initBalance() {
-        const utxos = await this.store.executeQuery<Coin>('coins', {});
+        const utxos = await this.store.executeQuery<Coin>(
+            'coins', { network: this._network.name });
         const sum = utxos.reduce((sum, cur) => (sum + cur.value), 0);
         this._balanceInSatoshis.push(sum);
 
-        this.store.events.subscribe((event) => {
-            if (event.store !== 'coins') return;
-            const currentValue = this._balanceInSatoshis.currentValue ?? 0;
-            const newValue = {
-                'save': () => currentValue + event.data.value,
-                'delete': () => currentValue - event.data.reduce(
-                    (acc: number, cur: Coin) => (acc + cur.value), 0),
-            }[event.action]();
+        this._unsubscribeList.push(
+            this.store.events.subscribe((event) => {
+                if (event.store !== 'coins') return;
+                if (event.data.network !== this._network.name) return;
 
-            this._balanceInSatoshis.push(newValue);
-        });
+                const currentValue = this._balanceInSatoshis.currentValue ?? 0;
+                const newValue = {
+                    'save': () => currentValue + event.data.value,
+                    'delete': () => currentValue - event.data.reduce(
+                        (acc: number, cur: Coin) => (acc + cur.value), 0),
+                }[event.action]();
+
+                this._balanceInSatoshis.push(newValue);
+            }));
     }
 
-    get balanceInSatoshis() {
-        return this._balanceInSatoshis;
+    public destroy() {
+        this._unsubscribeList.forEach((v) => v());
     }
 
-    get network() {
-        return this._network;
-    }
-
-    getAccount() {
-        return this.account;
-    }
-
-    getReceiveAddr() {
-        return this.account.addresses[0].address;
-    }
-
-    getURI() {
-        return bip21.encode(this.getReceiveAddr());
-    }
-
-    async selectUTXOs(targets: { address: string, value: number }[]) {
+    async selectUTXOs(account: Account, targets: { address: string, value: number }[]) {
         const feeRate = 200; // await this.peers.getFeeEstimateLastNBlocks(22); //BTC per byte
 
-        const utxos = (await this.store.executeQuery<Coin>('coins', {}))
+        const utxos = (await this.store.executeQuery<Coin>('coins', { network: account.network }))
             .map((coin) => ({
                 address: coin.address,
                 txid: coin.mintTxid,
@@ -177,7 +222,7 @@ export class Wallet {
             if (output.address) return output;
             return {
                 ...output,
-                address: this.account.addresses[0].address,
+                address: account.addresses[0].address,
                 change: true, // Indicate change output
             }
         });
@@ -185,7 +230,10 @@ export class Wallet {
     }
 
     async createTx(targets: { address: string, value: number }[]) {
-        const { inputs, fee } = await this.selectUTXOs(targets);
+        const account = this._account.currentValue;
+        if (!account) throw new Error("Cannot create tx without an account");
+
+        const { inputs, fee } = await this.selectUTXOs(account, targets);
 
         if (!inputs)
             throw new Error('Could not complete transaction');
@@ -204,7 +252,7 @@ export class Wallet {
             transaction
         );
         transaction = transaction.fee(fee)
-            .change(this.account.addresses[0].address);
+            .change(account.addresses[0].address);
 
         transaction = Object.values(this.signers)
             .reduce((tx, pKey: PrivateKey) => tx.sign(pKey), transaction);

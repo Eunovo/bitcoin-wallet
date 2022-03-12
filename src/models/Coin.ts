@@ -6,4 +6,5 @@ export interface Coin {
     confirmations: number
     mintTxid: string
     mintIndex: number
+    network: string
 }
