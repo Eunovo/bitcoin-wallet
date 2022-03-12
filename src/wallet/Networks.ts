@@ -18,7 +18,7 @@ export const NETWORKS: { [k: string]: WalletNetwork } = {
     },
     testnet: {
         addressVersion: 0x6f,
-        color: '',
+        color: 'red',
         connect: () => new BitcoreConnection('testnet', ''),
         ...Networks.testnet
     }
