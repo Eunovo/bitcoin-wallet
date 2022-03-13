@@ -7,7 +7,7 @@ import { Block } from "../models/Block";
 import { Coin } from "../models/Coin";
 import { Metadata } from "../models/Metadata";
 import { Transaction as TxModel } from "../models/Transaction";
-import { Observable } from "../Observable";
+import { Subject } from "../Observable";
 import { IPeers, MessageTypes } from "../p2p/INetwork";
 import { LocalStore } from "../storage/LocalStore";
 import { NETWORKS, WalletNetwork } from "./Networks";
@@ -16,11 +16,11 @@ import { createHDMasterFromMnemonic, createMnemonic, generateAddress } from "./k
 
 export class Wallet {
 
-    private _account: Observable<Account | null> = new Observable();
+    private _account: Subject<Account | null> = new Subject();
     private password?: string;
-    private _authenticated: Observable<boolean> = new Observable();
-    private _balanceInSatoshis: Observable<number> = new Observable();
-    private currentTip: Observable<Block | undefined> = new Observable();
+    private _authenticated: Subject<boolean> = new Subject();
+    private _balanceInSatoshis: Subject<number> = new Subject();
+    private currentTip: Subject<Block | undefined> = new Subject();
     private signers: { [k: string]: PrivateKey } = {};
     private _network: WalletNetwork;
     private _unsubscribeList: (() => void)[] = [];
@@ -55,11 +55,11 @@ export class Wallet {
                 this.init(account);
             }));
 
-        this.account.push(account || null);
+        this._account.push(account || null);
     }
 
     get balanceInSatoshis() {
-        return this._balanceInSatoshis;
+        return this._balanceInSatoshis.getObservable();
     }
 
     get network() {
@@ -67,11 +67,15 @@ export class Wallet {
     }
 
     get account() {
-        return this._account;
+        return this._account.getObservable();
+    }
+
+    setAccount(account: Account) {
+        this._account.push(account);
     }
 
     get authenticated() {
-        return this._authenticated;
+        return this._authenticated.getObservable();
     }
 
     async login(password: string) {

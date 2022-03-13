@@ -19,7 +19,7 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
             const quickstart = (await state.localStore.executeQuery<Metadata<number>>(
                 '_metadata', { name: 'quickstart' }))[0]?.value;
 
-            state.wallet.account.push(savedAccount);
+            state.wallet.setAccount(savedAccount);
             dispatch({ type: ActionTypes.init, payload: { quickstart } });
         })();
     }, [state.ready, state.localStore, state.wallet]);

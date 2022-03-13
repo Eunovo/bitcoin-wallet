@@ -2,7 +2,6 @@ import { createContext } from "react";
 import { IndexedDBStore } from "../storage/IndexedDBStore";
 import { LocalStore } from "../storage/LocalStore";
 import { IPeers } from "../p2p/INetwork";
-import { BitcoreConnection } from "../p2p/Bitcorep2p";
 import { Wallet } from "../wallet/Wallet";
 import { DEFAULT_NETWORK, NETWORKS } from "../wallet/Networks";
 

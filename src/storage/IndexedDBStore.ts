@@ -1,16 +1,20 @@
 import { IDBPDatabase, openDB } from "idb";
-import { Observable } from "../Observable";
+import { Subject } from "../Observable";
 import { LocalStore, STORENAMES, STORES } from "./LocalStore";
 
 export class IndexedDBStore implements LocalStore {
-    public events: Observable<{
+    private _events: Subject<{
         action: 'save' | 'delete', store: STORENAMES, data: any
-    }> = new Observable();
+    }> = new Subject();
 
     private db: Promise<IDBPDatabase>;
 
     constructor() {
         this.db = this.init();
+    }
+
+    get events() {
+        return this._events.getObservable();
     }
 
     init() {
@@ -28,7 +32,7 @@ export class IndexedDBStore implements LocalStore {
     async save(storeName: STORENAMES, data: any) {
         const db = await this.db;
         db.put(storeName, data);
-        this.events.push({
+        this._events.push({
             action: 'save',
             store: storeName,
             data
@@ -59,7 +63,7 @@ export class IndexedDBStore implements LocalStore {
             doc => db.delete(storeName, doc[STORES[storeName].keyPath])
         ));
 
-        this.events.push({
+        this._events.push({
             action: 'delete',
             store: storeName,
             data
