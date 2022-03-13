@@ -16,9 +16,9 @@ export class TripleDESCipher implements Cipher {
         return CryptoJS.TripleDES.encrypt(value, this.password).toString();
     }
 
-    decrypt(value: string) {
+    decrypt(value: string, enc: any = CryptoJS.enc.Utf8) {
         return CryptoJS.TripleDES.decrypt(value, this.password)
-            .toString(CryptoJS.enc.Utf8);
+            .toString(enc);
     }
 
     encryptAccount(account: Account): Account {
@@ -45,7 +45,8 @@ export class TripleDESCipher implements Cipher {
             },
             addresses: account.addresses
                 .map(({ privKey, pubKey, address }) => ({
-                    privKey: this.decrypt(privKey), pubKey: this.decrypt(pubKey),
+                    privKey: this.decrypt(privKey),
+                    pubKey: this.decrypt(pubKey),
                     address
                 }))
         };

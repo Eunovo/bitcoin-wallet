@@ -10,6 +10,7 @@ export interface WalletNetwork extends Networks.Network {
 
 export const NETWORKS: { [k: string]: WalletNetwork } = {
     regtest: {
+        ...Networks.testnet,
         addressVersion: 0x6f,
         color: 'cyan',
         connect: () => new BitcoreConnection('regtest', 'localhost:4005'),

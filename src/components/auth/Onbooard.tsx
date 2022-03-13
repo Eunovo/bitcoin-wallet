@@ -34,12 +34,12 @@ const Onboard: React.FC = () => {
             }
             setMnemonic(mnemonic);
         })();
-    }, [localStore, quickstart]);
+    }, [localStore, quickstart, wallet]);
 
     const completeWalletSetup = useCallback(async () => {
         setLoading(true);
-        await wallet.setup(mnemonic);
         dispatch({ type: ActionTypes.quickstart, payload: 1 });
+        await wallet.setup(mnemonic);
     }, [wallet, mnemonic, dispatch]);
 
     return <Box

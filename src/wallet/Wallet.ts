@@ -31,7 +31,7 @@ export class Wallet {
         private peers: IPeers,
         private store: LocalStore,
         account: Account | null | undefined,
-        network: 'regtest' | 'mainnet' = 'regtest'
+        network: 'regtest' | 'testnet' | 'mainnet' = 'regtest'
     ) {
         this._authenticated.push(false);
         this._network = NETWORKS[network];
@@ -51,7 +51,9 @@ export class Wallet {
                 // Initialize signers for each address
                 this.signers = account.addresses.reduce((acc, addr) => ({
                     ...acc, [addr.address]: new PrivateKey(
-                        bs58check.encode(Buffer.from(addr.privKey)), this._network),
+                        bs58check.encode(Buffer.from(addr.privKey, 'hex')),
+                        this._network
+                    ),
                 }), {});
 
                 this.init(account);

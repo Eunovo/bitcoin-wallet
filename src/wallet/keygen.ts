@@ -23,15 +23,16 @@ function createAddressFrom(pubKey: Buffer, version: number) {
     return bs58check.encode(versionByte);
 }
 
-export function generateAddress(masterJSON: any, version: number) {
+export function generateAddress(masterJSON: any, version: number, path: string = 'm/0') {
     const hdMaster = hdkey.fromJSON(masterJSON);
-    const path = 'm/0';
     const child = hdMaster.derive(path);
     const privKey = child.privateKey;
     const pubKey = child.publicKey;
 
     return {
-        privKey: privKey.toString(), pubKey: pubKey.toString(), path,
+        privKey: privKey.toString('hex'),
+        pubKey: pubKey.toString('hex'),
+        path,
         address: createAddressFrom(pubKey, version)
     };
 }
