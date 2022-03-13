@@ -19,14 +19,24 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
             const quickstart = (await state.localStore.executeQuery<Metadata<number>>(
                 '_metadata', { name: 'quickstart' }))[0]?.value;
 
-            state.wallet.setAccount(savedAccount);
+            if (savedAccount) state.wallet.setEncryptedAccount(savedAccount);
             dispatch({ type: ActionTypes.init, payload: { quickstart } });
         })();
     }, [state.ready, state.localStore, state.wallet]);
 
     useEffect(() => {
         if (!account) return;
-        state.localStore.save('accounts', account);
+        
+        try {
+            // only save encrypted version
+            state.localStore.save(
+                'accounts', state.wallet.getEncryptedAccount());
+        } catch (e) {
+            // error should only be thrown if wallet is not authenticated
+            // but this is not possible
+
+            console.log(e);
+        }
     }, [account]);
 
     return <AppContext.Provider value={state}>

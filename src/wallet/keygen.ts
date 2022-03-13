@@ -31,7 +31,7 @@ export function generateAddress(masterJSON: any, version: number) {
     const pubKey = child.publicKey;
 
     return {
-        privKey, pubKey, path,
+        privKey: privKey.toString(), pubKey: pubKey.toString(), path,
         address: createAddressFrom(pubKey, version)
     };
 }

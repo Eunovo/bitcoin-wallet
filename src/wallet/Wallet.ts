@@ -1,3 +1,4 @@
+import { PrivateKey, Transaction } from "bitcore-lib";
 import bs58check from "bs58check";
 import bip21 from "bip21";
 import coinselect from "coinselect";
@@ -11,13 +12,14 @@ import { Subject } from "../Observable";
 import { IPeers, MessageTypes } from "../p2p/INetwork";
 import { LocalStore } from "../storage/LocalStore";
 import { NETWORKS, WalletNetwork } from "./Networks";
-import { PrivateKey, Transaction } from "bitcore-lib";
+import { Cipher, TripleDESCipher } from "./encryption";
 import { createHDMasterFromMnemonic, createMnemonic, generateAddress } from "./keygen";
+
 
 export class Wallet {
 
     private _account: Subject<Account | null> = new Subject();
-    private password?: string;
+    private cipher?: Cipher;
     private _authenticated: Subject<boolean> = new Subject();
     private _balanceInSatoshis: Subject<number> = new Subject();
     private currentTip: Subject<Block | undefined> = new Subject();
@@ -55,7 +57,7 @@ export class Wallet {
                 this.init(account);
             }));
 
-        this._account.push(account || null);
+        if (account) this.setEncryptedAccount(account || null);
     }
 
     get balanceInSatoshis() {
@@ -70,8 +72,30 @@ export class Wallet {
         return this._account.getObservable();
     }
 
-    setAccount(account: Account) {
-        this._account.push(account);
+    async getEncryptedAccount() {
+        if (!this.cipher) throw new Error('Wallet is locked');
+
+        const account = this._account.currentValue;
+        if (!account) throw new Error('No account to encrypt');
+
+        // encrypt and return
+        return this.cipher.encryptAccount(account);
+    }
+
+    setEncryptedAccount(account: Account) {
+        if (this.cipher) {
+            // decrypt account and push
+            this._account.push(this.cipher.decryptAccount(account));
+            return;
+        }
+        // wait till wallet is unlocked
+        const unsubscribe = this._authenticated.subscribe((auth) => {
+            if (!auth || !this.cipher) return;
+            // now password should be available
+            this._account.push(this.cipher.decryptAccount(account));
+            unsubscribe();
+        });
+        this._unsubscribeList.push(unsubscribe);
     }
 
     get authenticated() {
@@ -99,7 +123,7 @@ export class Wallet {
             await this.setPassword(password);
         }
 
-        this.password = password;
+        this.cipher = new TripleDESCipher(password);
         this._authenticated.push(true);
     }
 
@@ -117,12 +141,15 @@ export class Wallet {
     }
 
     async getOrCreateMnemonic() {
+        if (!this.cipher) throw new Error("Wallet locked");
+
         const savedMnemonic = (await this.store.executeQuery<Metadata>(
             '_metadata', { name: 'mnemonic' }))[0]?.value;
-        if (savedMnemonic) return savedMnemonic;
+        if (savedMnemonic) return this.cipher.decrypt(savedMnemonic);
 
         const newMnemonic = createMnemonic();
-        await this.store.save('_metadata', { name: 'mnemonic', value: newMnemonic });
+        await this.store.save(
+            '_metadata', { name: 'mnemonic', value: this.cipher.encrypt(newMnemonic) });
 
         return newMnemonic;
     }
