@@ -29,8 +29,14 @@ export class IndexedDBStore implements LocalStore {
         });
     }
 
-    async save(storeName: STORENAMES, data: any) {
+    async save(storeName: STORENAMES, data: any, overwrite = true) {
         const db = await this.db;
+
+        if (!overwrite) {
+            const existing = await this.executeQuery(storeName, data);
+            if (existing.length > 0) return;
+        }
+
         db.put(storeName, data);
         this._events.push({
             action: 'save',

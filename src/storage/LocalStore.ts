@@ -5,7 +5,7 @@ export interface LocalStore {
         action: 'save' | 'delete', store: STORENAMES, data: any
     }>
 
-    save(storeName: STORENAMES, data: any): Promise<void>
+    save(storeName: STORENAMES, data: any, overwrite?: boolean): Promise<void>
     executeQuery<T = any>(storeName: STORENAMES, query?: Partial<T>): Promise<T[]>
     remove(storeName: STORENAMES, query?: any): Promise<number>
 }

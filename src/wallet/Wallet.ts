@@ -203,7 +203,8 @@ export class Wallet {
             const utxoPromises = account.addresses
                 .map((addr) => this.peers.getUTXOsFor(addr.address));
             const utxos = await Promise.all(utxoPromises);
-            utxos.forEach((coins) => coins.forEach(coin => this.store.save('coins', coin)));
+            utxos.forEach((coins) =>
+                coins.forEach(coin => this.store.save('coins', coin, false)));
             return;
         }
 
@@ -242,7 +243,7 @@ export class Wallet {
             spentCoins
                 .forEach((coin: Coin) => this.store.remove('coins', { _id: coin._id }));
             newCoins
-                .forEach((coin: Coin) => this.store.save('coins', coin));
+                .forEach((coin: Coin) => this.store.save('coins', coin, false));
 
             if (newCoins.length === 0 || existingTx[0]) return; // Only create new credit transactions
 
