@@ -89,7 +89,7 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
 
                         <Typography color='GrayText' variant='body2'>
                             You will have {
-                                new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 })
+                                new Intl.NumberFormat('en-IN', { maximumFractionDigits: 8 })
                                     .format(values.amountInBTC ? balance - values.amountInBTC : balance)
                             } BTC left
                         </Typography>
