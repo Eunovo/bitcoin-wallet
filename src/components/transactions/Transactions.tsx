@@ -7,6 +7,11 @@ export const TransactionList: React.FC<{ transactions: Transaction[] }> = ({ tra
         {
             transactions.map((transaction, i) => <TransactionItem key={i} transaction={transaction} />)
         }
+        {
+            transactions.length === 0 && <Typography align='center' color='textSecondary' sx={{ fontSize: '1.5rem' }}>
+                You haven't made any transactions
+            </Typography>
+        }
     </Box>
 }
 
