@@ -288,6 +288,7 @@ export class Wallet {
     public getWalletFor(network: 'regtest' | 'testnet' | 'mainnet', peers: IPeers, account?: Account) {
         const wallet = new Wallet(peers, this.store, account, network);
         wallet.cipher = this.cipher;
+        wallet._authenticated.push(true);
         return wallet;
     }
 
