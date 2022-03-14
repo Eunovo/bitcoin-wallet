@@ -345,11 +345,12 @@ export class Wallet {
         transaction = Object.values(this.signers)
             .reduce((tx, pKey: PrivateKey) => tx.sign(pKey), transaction);
 
+        console.log(transaction.inputs.map((input) => input.script));
         return transaction;
     }
 
     async send(tx: Transaction) {
-        const { txid } = await this.peers.sendRawTx(tx.toString());
+        const { txid } = await this.peers.sendRawTx(tx.serialize());
         const targets = tx.outputs.filter((output: any) => output === tx.getChangeOutput());
         await this.store.save('transactions', {
             txid,

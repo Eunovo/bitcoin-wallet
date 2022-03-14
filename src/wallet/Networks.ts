@@ -9,6 +9,12 @@ export interface WalletNetwork extends Networks.Network {
 }
 
 export const NETWORKS: { [k: string]: WalletNetwork } = {
+    testnet: {
+        addressVersion: 0x6f,
+        color: 'red',
+        connect: () => new BitcoreConnection('testnet', 'https://api.bitcore.io', 'wss://api.bitcore.io'),
+        ...Networks.testnet
+    },
     regtest: {
         ...Networks.testnet,
         addressVersion: 0x6f,
@@ -16,13 +22,7 @@ export const NETWORKS: { [k: string]: WalletNetwork } = {
         connect: () => new BitcoreConnection('regtest', 'http://localhost:4005', 'ws://localhost:4005'),
         name: 'regtest',
         alias: 'regtest'
-    },
-    testnet: {
-        addressVersion: 0x6f,
-        color: 'red',
-        connect: () => new BitcoreConnection('testnet', 'https://api.bitcore.io', 'wss://api.bitcore.io'),
-        ...Networks.testnet
     }
 }
 
-export const DEFAULT_NETWORK = 'regtest';
+export const DEFAULT_NETWORK = 'testnet';
