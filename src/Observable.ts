@@ -52,7 +52,15 @@ export const useObservable = <T>(observable: Observable<T>) => {
     const [data, setData] = useState<T | undefined>(observable.currentValue);
 
     useEffect(() => {
-        return observable.subscribe(setData);
+        let isMounted = true;
+        const unsubscribe = observable.subscribe((data) => {
+            if (!isMounted) return;
+            setData(data);
+        });
+        return () => {
+            isMounted = false;
+            unsubscribe();
+        }
     }, [observable, setData]);
 
     return data;

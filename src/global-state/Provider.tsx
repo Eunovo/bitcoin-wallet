@@ -1,14 +1,12 @@
 import { Reducer, useEffect, useReducer, createContext, useContext } from "react";
 import { Account } from "../models/Account";
 import { Metadata } from "../models/Metadata";
-import { useObservable } from "../Observable";
 import { AppContext, GlobalState, INITIAL_STATE } from "./context";
 
 const DispatchContext = createContext<any>({});
 
 export const GlobalStateProvider: React.FC = ({ children }) => {
     const [state, dispatch] = useReducer<Reducer<GlobalState, any>>(reducer, INITIAL_STATE);
-    const account = useObservable(state.wallet.account);
 
     useEffect(() => {
         if (!state.localStore || state.ready) return;
@@ -25,7 +23,7 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
     }, [state.ready, state.localStore, state.wallet]);
 
     useEffect(() => {
-        if (!account || !state.ready) return;
+        if (!state.wallet.account.currentValue || !state.ready) return;
 
         (async () => {
             try {
@@ -34,12 +32,12 @@ export const GlobalStateProvider: React.FC = ({ children }) => {
                     'accounts', await state.wallet.getEncryptedAccount());
             } catch (e) {
                 // error should only be thrown if wallet is not authenticated
-                // but this is not possible
+                // but this should not be possible
 
                 console.log(e);
             }
         })();
-    }, [account, state.wallet, state.localStore, state.ready]);
+    }, [state.wallet.account.currentValue, state.wallet, state.localStore, state.ready]);
 
     useEffect(() => {
         if (!state.ready) return;

@@ -285,6 +285,12 @@ export class Wallet {
         this._unsubscribeList.forEach((v) => v());
     }
 
+    public getWalletFor(network: 'regtest' | 'testnet' | 'mainnet', peers: IPeers, account?: Account) {
+        const wallet = new Wallet(peers, this.store, account, network);
+        wallet.cipher = this.cipher;
+        return wallet;
+    }
+
     async selectUTXOs(account: Account, targets: { address: string, value: number }[]) {
         const feeRate = 200; // await this.peers.getFeeEstimateLastNBlocks(22); //BTC per byte
 

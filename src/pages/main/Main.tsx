@@ -118,7 +118,7 @@ export const Main: React.FC = () => {
                             <Box display='flex' alignItems='center' justifyContent='center'
                                 height='15rem' width='20rem' mx='auto'
                             >
-                                <QRCodeGenerator data={wallet?.getURI() || ""} />    
+                                <QRCodeGenerator data={wallet?.getURI()} />    
                             </Box>
 
                             <Box mx='auto'>

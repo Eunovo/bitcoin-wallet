@@ -37,6 +37,8 @@ export const SelectNetwork: React.FC<{ wallet?: Wallet }> = ({ wallet }) => {
                 <MenuItem key={key}
                     sx={{ width: '10rem' }}
                     onClick={async () => {
+                        if (!wallet) return;
+                        
                         const network = NETWORKS[key];
                         const peers = network.connect();
                         const accounts = await localStore.executeQuery<Account>(
@@ -45,7 +47,7 @@ export const SelectNetwork: React.FC<{ wallet?: Wallet }> = ({ wallet }) => {
                         dispatch({
                             type: ActionTypes.change_network,
                             payload: {
-                                wallet: new Wallet(peers, localStore, accounts[0], key),
+                                wallet: wallet.getWalletFor(key, peers, accounts[0]),
                                 peers
                             }    
                         });
