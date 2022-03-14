@@ -22,13 +22,13 @@ export class BitcoreConnection implements IPeers {
         this.socket.on("connect", () => {
             console.log(`Connected at ${new Date()}`);
 
-            this.socket.on('tx', (sanitizedTx: any) => {
-                console.log(sanitizedTx);
-            });
+            // this.socket.on('tx', (sanitizedTx: any) => {
+            //     console.log(sanitizedTx);
+            // });
 
-            this.socket.on('coin', (sanitizedCoin: any) => {
-                console.log(sanitizedCoin);
-            });
+            // this.socket.on('coin', (sanitizedCoin: any) => {
+            //     console.log(sanitizedCoin);
+            // });
 
             this.socket.emit('room', `/BTC/${this.network}/inv`);
             this.socket.emit('room', `/BTC/${this.network}/address`);
