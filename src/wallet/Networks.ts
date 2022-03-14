@@ -13,14 +13,14 @@ export const NETWORKS: { [k: string]: WalletNetwork } = {
         ...Networks.testnet,
         addressVersion: 0x6f,
         color: 'cyan',
-        connect: () => new BitcoreConnection('regtest', 'localhost:4005'),
+        connect: () => new BitcoreConnection('regtest', 'http://localhost:4005', 'ws://localhost:4005'),
         name: 'regtest',
         alias: 'regtest'
     },
     testnet: {
         addressVersion: 0x6f,
         color: 'red',
-        connect: () => new BitcoreConnection('testnet', ''),
+        connect: () => new BitcoreConnection('testnet', 'https://api.bitcore.io', 'wss://api.bitcore.io'),
         ...Networks.testnet
     }
 }

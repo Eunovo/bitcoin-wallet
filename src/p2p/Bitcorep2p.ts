@@ -8,7 +8,8 @@ export class BitcoreConnection implements IPeers {
 
     constructor(
         private network: 'regtest' | 'testnet' | 'mainnet',
-        private server: string
+        private apiUrl: string,
+        private wsUrl: string
     ) {
         this.connect();
     }
@@ -16,7 +17,7 @@ export class BitcoreConnection implements IPeers {
     connect() {
         console.log('Trying to connect...');
         this.socket = io(
-            `ws://${this.server}`, { transports: ['websocket'] }
+            this.wsUrl, { transports: ['websocket'] }
         );
         this.socket.on("connect", () => {
             console.log(`Connected at ${new Date()}`);
@@ -59,7 +60,7 @@ export class BitcoreConnection implements IPeers {
             const response = await axios(
                 {
                     method: params.method,
-                    url: `http://${this.server}/api/BTC/${this.network}${path}`,
+                    url: `${this.apiUrl}/api/BTC/${this.network}${path}`,
                     params: params.query,
                     data: params.body
                 }
