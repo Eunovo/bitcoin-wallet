@@ -3,6 +3,7 @@ import bs58check from "bs58check";
 import bip21 from "bip21";
 import coinselect from "coinselect";
 import bcrypt from "bcryptjs-cfw";
+import { v4 as generateId } from "uuid";
 import { Account } from "../models/Account";
 import { Block } from "../models/Block";
 import { Coin } from "../models/Coin";
@@ -171,6 +172,7 @@ export class Wallet {
         const masterJSON = await createHDMasterFromMnemonic(mnemonic);
         const receiveAddr = generateAddress(masterJSON, this._network.addressVersion);
         this._account.push({
+            _id: generateId(),
             master: masterJSON,
             addresses: [receiveAddr],
             network: this._network.name

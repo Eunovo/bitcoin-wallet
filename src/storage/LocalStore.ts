@@ -20,7 +20,7 @@ export const STORES: { [T in STORENAMES]: STOREOPTIONS } = {
         keyPath: 'name'
     },
     accounts: {
-        keyPath: 'master.xpriv'
+        keyPath: '_id'
     },
     coins: {
         keyPath: '_id'
