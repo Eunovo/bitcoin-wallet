@@ -19,7 +19,6 @@ import {
     createMnemonic,
     generateAddress
 } from "./keygen";
-import { convertBTCToSatoshis } from "../utils";
 import { sign, sigToDER } from "./Signer";
 
 
@@ -218,7 +217,9 @@ export class Wallet {
                 .map((addr) => this.peers.getUTXOsFor(addr.address));
             const utxos = await Promise.all(utxoPromises);
             utxos.forEach((coins) =>
-                coins.forEach(coin => this.store.save('coins', coin, false)));
+                coins.filter((coin: any) => coin.spentTxid === "")
+                    .forEach(coin => this.store.save('coins', coin, false)));
+
             return;
         }
 
@@ -253,7 +254,7 @@ export class Wallet {
             const { inputs, outputs } = await this.peers.getTxCoins(tx.txid);
             const spentCoins = inputs.filter((coin: Coin) => addresses[coin.address]);
             const newCoins = outputs.filter((coin: Coin) => addresses[coin.address]);
-
+            console.log(spentCoins, newCoins);
             spentCoins
                 .forEach((coin: Coin) => this.store.remove('coins', { _id: coin._id }));
             newCoins
@@ -308,7 +309,7 @@ export class Wallet {
     }
 
     async selectUTXOs(account: Account, targets: { address: string, value: number }[]) {
-        const feeRate = convertBTCToSatoshis(await this.peers.getFeeEstimateLastNBlocks(22));
+        const feeRate = 200; // convertBTCToSatoshis(await this.peers.getFeeEstimateLastNBlocks(22));
 
         const utxos = (await this.store.executeQuery<Coin>('coins', { network: account.network }))
             .map((coin) => ({
@@ -372,7 +373,7 @@ export class Wallet {
 
     async send(tx: Transaction, targets: { address: string, value: number }[]) {
         const { txid } = await this.peers.sendRawTx(tx.serialize());
-        
+
         await this.store.save('transactions', {
             txid,
             targets,
