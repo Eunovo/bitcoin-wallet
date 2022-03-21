@@ -4,6 +4,7 @@ import { IPeers } from "../p2p/INetwork"
 
 export interface WalletNetwork extends Networks.Network {
     addressVersion: number,
+    wifVersion: number,
     color: string,
     connect: () => IPeers
 }
@@ -11,6 +12,7 @@ export interface WalletNetwork extends Networks.Network {
 export const NETWORKS: { [k: string]: WalletNetwork } = {
     testnet: {
         addressVersion: 0x6f,
+        wifVersion: 0xef,
         color: 'red',
         connect: () => new BitcoreConnection('testnet', 'https://api.bitcore.io', 'wss://api.bitcore.io'),
         ...Networks.testnet
@@ -18,6 +20,7 @@ export const NETWORKS: { [k: string]: WalletNetwork } = {
     regtest: {
         ...Networks.testnet,
         addressVersion: 0x6f,
+        wifVersion: 0xef,
         color: 'cyan',
         connect: () => new BitcoreConnection('regtest', 'http://localhost:4005', 'ws://localhost:4005'),
         name: 'regtest',

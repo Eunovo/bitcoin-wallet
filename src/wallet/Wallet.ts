@@ -1,5 +1,5 @@
-import { PrivateKey, Transaction } from "bitcore-lib";
-import bs58check from "bs58check";
+import { PrivateKey, Script, Transaction } from "bitcore-lib";
+import Signature from "bitcore-lib/lib/crypto/signature";
 import bip21 from "bip21";
 import coinselect from "coinselect";
 import bcrypt from "bcryptjs-cfw";
@@ -14,7 +14,13 @@ import { IPeers, MessageTypes } from "../p2p/INetwork";
 import { LocalStore } from "../storage/LocalStore";
 import { NETWORKS, WalletNetwork } from "./Networks";
 import { Cipher, TripleDESCipher } from "./encryption";
-import { createHDMasterFromMnemonic, createMnemonic, generateAddress } from "./keygen";
+import {
+    createHDMasterFromMnemonic,
+    createMnemonic,
+    generateAddress
+} from "./keygen";
+import { convertBTCToSatoshis } from "../utils";
+import { sign, sigToDER } from "./Signer";
 
 
 export class Wallet {
@@ -50,12 +56,12 @@ export class Wallet {
                 if (!account) return;
 
                 // Initialize signers for each address
-                this.signers = account.addresses.reduce((acc, addr) => ({
-                    ...acc, [addr.address]: new PrivateKey(
-                        bs58check.encode(Buffer.from(addr.privKey, 'hex')),
-                        this._network
-                    ),
-                }), {});
+                this.signers = account.addresses.reduce((acc, addr) => {
+                    const pKey = new PrivateKey(addr.privKey);
+                    return {
+                        ...acc, [addr.address]: pKey,
+                    };
+                }, {});
 
                 this.init(account);
             }));
@@ -75,7 +81,7 @@ export class Wallet {
         return this._account.getObservable();
     }
 
-    async getEncryptedAccount() {
+    getEncryptedAccount() {
         if (!this.cipher) throw new Error('Wallet is locked');
 
         const account = this._account.currentValue;
@@ -170,7 +176,13 @@ export class Wallet {
 
     async setup(mnemonic: string) {
         const masterJSON = await createHDMasterFromMnemonic(mnemonic);
-        const receiveAddr = generateAddress(masterJSON, this._network.addressVersion);
+        const receiveAddr = generateAddress(
+            masterJSON,
+            {
+                wif: this._network.wifVersion,
+                address: this._network.addressVersion
+            });
+
         this._account.push({
             _id: generateId(),
             master: masterJSON,
@@ -296,7 +308,7 @@ export class Wallet {
     }
 
     async selectUTXOs(account: Account, targets: { address: string, value: number }[]) {
-        const feeRate = 200; // await this.peers.getFeeEstimateLastNBlocks(22); //BTC per byte
+        const feeRate = convertBTCToSatoshis(await this.peers.getFeeEstimateLastNBlocks(22));
 
         const utxos = (await this.store.executeQuery<Coin>('coins', { network: account.network }))
             .map((coin) => ({
@@ -326,7 +338,7 @@ export class Wallet {
         const { inputs, fee } = await this.selectUTXOs(account, targets);
 
         if (!inputs)
-            throw new Error('Could not complete transaction');
+            throw new Error('Amount too small!');
 
         const utxos = inputs
             .map(({ address, txid, vout, value, script }: any) =>
@@ -344,10 +356,17 @@ export class Wallet {
         transaction = transaction.fee(fee)
             .change(account.addresses[0].address);
 
-        transaction = Object.values(this.signers)
-            .reduce((tx, pKey: PrivateKey) => tx.sign(pKey), transaction);
+        const key = Object.values(this.signers)[0];
+        transaction.inputs.forEach((input, index) => {
+            const sigtype = Signature.SIGHASH_ALL;
+            const signature = sign(transaction, index, key, sigtype);
+            const der = sigToDER(signature);
 
-        console.log(transaction.inputs.map((input) => input.script));
+            (input as any).setScript(Script.buildPublicKeyHashIn(
+                key.publicKey, der, sigtype
+            ));
+        });
+
         return transaction;
     }
 
