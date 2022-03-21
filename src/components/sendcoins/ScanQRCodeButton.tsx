@@ -34,7 +34,7 @@ export const ScanQRCodeButton: React.FC<IScanProps & IconButtonProps> = ({
         } else {
             qrcodeScannerRef.current?.stop();
         }
-    }, [open, setOpen, qrcodeScannerRef.current]);
+    }, [open, setOpen, onScanSuccess]);
 
     return <>
         <IconButton

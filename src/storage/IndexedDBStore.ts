@@ -55,7 +55,7 @@ export class IndexedDBStore implements LocalStore {
         const allData = await db.getAll(storeName, key);
         const result = allData.filter((value) => (
             Object.keys(query as any).reduce((accumulated: boolean, currentKey: string) => {
-                return accumulated && (<any>query)[currentKey] === value[currentKey];
+                return accumulated && (query as any)[currentKey] === value[currentKey];
             }, true)
         ));
 
