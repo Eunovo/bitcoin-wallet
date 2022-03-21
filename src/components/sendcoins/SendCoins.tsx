@@ -52,6 +52,7 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
                     const tx = await wallet.createTx(targets);
                     await wallet.send(tx, targets);
                     actions.resetForm();
+                    enqueueSnackbar("Transaction sent!", { variant: 'success' });
                 } catch (e: any) {
                     console.error(e);
                     enqueueSnackbar(e.message, { variant: 'error' });
