@@ -32,7 +32,11 @@ export const ScanQRCodeButton: React.FC<IScanProps & IconButtonProps> = ({
             );
             qrcodeScannerRef.current = html5QrcodeScanner;
         } else {
-            qrcodeScannerRef.current?.stop();
+            (async () => {
+                try {
+                    await qrcodeScannerRef.current?.stop();
+                } catch (e) { }
+            })()
         }
     }, [open, setOpen, onScanSuccess]);
 
@@ -55,7 +59,7 @@ export const ScanQRCodeButton: React.FC<IScanProps & IconButtonProps> = ({
 
             <DialogContent
                 id='reader'
-                sx={{ height: '313px',  '& video': { position: 'absolute', left: 0 } }}
+                sx={{ height: '313px', '& video': { position: 'absolute', left: 0 } }}
             ></DialogContent>
 
             <DialogActions>
