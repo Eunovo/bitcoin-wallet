@@ -46,10 +46,11 @@ export const SendCoins: React.FC<ISendCoinsProps> = ({ wallet, handleBack }) => 
             })}
             onSubmit={async (values, actions) => {
                 try {
-                    const tx = await wallet.createTx([
+                    const targets = [
                         { address: values.destinationAddr, value: convertBTCToSatoshis(values.amountInBTC) }
-                    ]);
-                    await wallet.send(tx);
+                    ]
+                    const tx = await wallet.createTx(targets);
+                    await wallet.send(tx, targets);
                     actions.resetForm();
                 } catch (e: any) {
                     console.error(e);

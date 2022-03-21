@@ -370,9 +370,9 @@ export class Wallet {
         return transaction;
     }
 
-    async send(tx: Transaction) {
+    async send(tx: Transaction, targets: { address: string, value: number }[]) {
         const { txid } = await this.peers.sendRawTx(tx.serialize());
-        const targets = tx.outputs.filter((output: any) => output === tx.getChangeOutput());
+        
         await this.store.save('transactions', {
             txid,
             targets,
