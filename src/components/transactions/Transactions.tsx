@@ -22,14 +22,14 @@ export const TransactionItem: React.FC<{ transaction: Transaction }> = ({ transa
 
     return <Paper variant="outlined"
         sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, p: 2, minHeight: '5rem' }}>
-        <Typography noWrap sx={{ width: '50%', mr: 2 }}>
-            {addresses[0] ?? 'Coinbase'}
+        <Typography noWrap sx={{ width: '40%', mr: 2 }}>
+            {addresses[0]?.address ?? 'Coinbase'}
         </Typography>
 
         <Typography sx={{
             flexGrow: 1, color: isDebit ? 'red' : 'green',
             [theme.breakpoints.down('sm')]: { textAlign: 'right' } }}>
-            {new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            {new Intl.NumberFormat('en-IN', { minimumFractionDigits: 8, maximumFractionDigits: 8 })
                 .format(convertSatoshisToBTC(transaction.amount))} BTC
         </Typography>
 
